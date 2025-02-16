@@ -16,4 +16,4 @@ go run main.go
 
 ## TODO
 
-Cache website output - shouldn't be fetching it every time.
+ - Provide separate %s - one including secrets and one not (since secrets are dupes of a non-secret)

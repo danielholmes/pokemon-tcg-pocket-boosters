@@ -9,6 +9,9 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"os"
+	"net/url"
+	"path/filepath"
 
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
@@ -71,9 +74,18 @@ type missingInSet struct {
 }
 
 var missing = [...]missingInSet{
-	{cardSet: geneticApexSet, missing: []uint16{3, 4, 7, 10, 13, 20, 22, 36, 37, 39, 41, 47, 50, 56, 61, 69, 73, 76, 80, 84, 86, 89, 93, 95, 98, 101, 107, 117, 123, 124, 145, 146, 148, 149, 159, 163, 166, 175, 177, 178, 185, 191, 195, 197, 202, 203, 204, 205, 221, 225, 226}},
-	{cardSet: mythicalIslandSet, missing: []uint16{2, 3, 6, 7, 18, 19, 25, 26, 32, 44, 46, 59, 60, 62}},
-	{cardSet: spaceTimeSmackdownSet, missing: []uint16{5, 6, 7, 18, 20, 22, 24, 29, 32, 33, 34, 36, 37, 40, 41, 60, 65, 76, 79, 89, 90, 92, 94, 103, 104, 109, 113, 117, 120, 123, 129, 147, 153}},
+	{cardSet: geneticApexSet, missing: []uint16{
+		3, 4, 7, 10, 13, 20, 22, 36, 37, 39, 41, 47, 50, 56, 61, 69, 73, 76, 80, 84, 86, 89, 93, 95, 98, 101, 107, 117, 123, 124, 145, 146, 148, 149, 159, 163, 166, 175, 177, 178, 185, 191, 195, 197, 202, 203, 204, 205, 221, 225, 226,
+		228, 229, 230, 231, 232, 233, 236, 237, 238, 240, 241, 242, 243, 244, 246, 248, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286,
+	}},
+	{cardSet: mythicalIslandSet, missing: []uint16{
+		2, 3, 6, 7, 18, 19, 25, 26, 32, 44, 46, 59, 60, 62,
+		68, 71, 73, 75, 76, 79, 80, 81, 82, 83, 84, 85, 86,
+	}},
+	{cardSet: spaceTimeSmackdownSet, missing: []uint16{
+		5, 6, 7, 18, 20, 22, 24, 29, 32, 33, 34, 36, 37, 40, 41, 60, 65, 76, 79, 89, 90, 92, 94, 103, 104, 109, 113, 117, 120, 123, 129, 147, 153,
+		155, 156, 157, 158, 159, 160, 161, 162, 164, 166, 167, 168, 169, 170, 171, 172, 173, 176, 177, 178, 179, 180, 181, 182, 183, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 200, 201, 202, 203, 205, 206, 207,
+	}},
 }
 
 func fetchUrl(url string) (string, error) {
@@ -128,10 +140,60 @@ func getImmediateRows(table *html.Node) []*html.Node {
 	return rows
 }
 
+func readFileIfExists(filename string) string {
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		return ""
+	}
+
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return ""
+	}
+
+	return string(data)
+}
+
+func fetchBoosterFile(booster booster) (string, error) {
+	parsed, uErr := url.Parse(booster.serebiiUrl)
+	if uErr != nil {
+		return "", fmt.Errorf("error parsing URL: %v", uErr)
+	}
+
+	dir, dErr := os.Getwd()
+	if dErr != nil {
+		return "", dErr
+	}
+
+	cacheFilepath := filepath.Join(dir, ".cache", parsed.Path)
+	var fileBody = readFileIfExists(cacheFilepath)
+	if fileBody != "" {
+		return fileBody, nil
+	}
+
+	fmt.Printf("No cached file found for %v, fetching %v\n", booster.name, booster.serebiiUrl)
+	var body, err = fetchUrl(booster.serebiiUrl)
+	if err != nil {
+		return "", err
+	}
+
+	cacheFileDirpath := filepath.Dir(cacheFilepath)
+	mDErr := os.MkdirAll(cacheFileDirpath, 0755)
+	if mDErr != nil {
+		return "", mDErr
+	}
+
+	wErr := os.WriteFile(cacheFilepath, []byte(body), 0755)
+	if wErr != nil {
+		return "", wErr
+	}
+
+	return body, nil
+}
+
 func fetchBoosterOfferings(booster booster, wg *sync.WaitGroup, results chan<- boosterOfferings) {
 	defer wg.Done()
 
-	var body, err = fetchUrl(booster.serebiiUrl)
+	var body, err = fetchBoosterFile(booster)
 	// TODO: Find idiomatic way to handle go routine errors
 	if err != nil {
 		fmt.Println(err)
@@ -153,6 +215,7 @@ func fetchBoosterOfferings(booster booster, wg *sync.WaitGroup, results chan<- b
 	rows := getImmediateRows(table)
 
 	offerings := make([]cardOffering, len(rows))
+	totalOffering := 0.0
 	for i, r := range rows {
 		cells := []*html.Node{}
 		for c := range r.ChildNodes() {
@@ -227,15 +290,19 @@ func fetchBoosterOfferings(booster booster, wg *sync.WaitGroup, results chan<- b
 			fifthRarity, _ = strconv.ParseFloat(rawRarity[:len(rawRarity)-1], 64)
 		}
 
+		currentOffering := firstThreeRarity*3 + fourthRarity + fifthRarity
 		offerings[i] = cardOffering{
 			card: card{
 				name:   name,
 				number: number,
 			},
-			offering: firstThreeRarity*3 + fourthRarity + fifthRarity,
+			offering: currentOffering,
 		}
+
+		totalOffering += currentOffering
 	}
 
+	fmt.Printf("Booster %s total offerings (should = 500%%) %v\n", booster.name, totalOffering)
 	results <- boosterOfferings{
 		booster:   booster,
 		offerings: offerings,
