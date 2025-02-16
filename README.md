@@ -5,7 +5,8 @@ A utility to work out which booster pack gives you the highest chance of receivi
 
 ## Dependencies
 
-Use asdf to install required version of go, or otherwise see `.tool-versions` to install the required version manually.
+ 1. Use asdf to install required versions of system dependencies, or otherwise see `.tool-versions` to install them manually in their required versions.
+ 2. Setup lefthook `lefthook install`
 
 
 ## Running
