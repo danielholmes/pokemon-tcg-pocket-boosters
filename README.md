@@ -17,4 +17,5 @@ go run main.go
 
 ## TODO
 
+ - Make missing card #s configurable - not hardcoded
  - Provide separate %s - one including secrets and one not (since secrets are dupes of a non-secret)
