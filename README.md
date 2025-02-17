@@ -17,4 +17,7 @@ go run main.go
 
 ## TODO
 
+ - Show % totals for 1st, 2nd, etc probabilities to make sure works
+ - Use errorgroup
+ - Include rare packs probabilities
  - Make missing card #s configurable - not hardcoded

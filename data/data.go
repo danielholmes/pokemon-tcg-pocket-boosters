@@ -1,6 +1,7 @@
 package data
 
 import (
+	"iter"
 	"ptcgpocket/ref"
 	"slices"
 	"sort"
@@ -54,12 +55,12 @@ type CardSetDetails struct {
 	totalSecretCards    uint16
 }
 
-func (c *CardSetDetails) Cards() []Card {
-	return c.cards
+func (c *CardSetDetails) Cards() iter.Seq[Card] {
+	return slices.Values(c.cards)
 }
 
-func (c *CardSetDetails) Boosters() []Booster {
-	return c.boosters
+func (c *CardSetDetails) Boosters() iter.Seq[Booster] {
+	return slices.Values(c.boosters)
 }
 
 func (c *CardSetDetails) TotalNonSecretCards() uint16 {
@@ -68,6 +69,10 @@ func (c *CardSetDetails) TotalNonSecretCards() uint16 {
 
 func (c *CardSetDetails) TotalSecretCards() uint16 {
 	return c.totalSecretCards
+}
+
+func (c *CardSetDetails) TotalCards() uint16 {
+	return uint16(len(c.cards))
 }
 
 func NewCardSetDetails(set ref.CardSet, boosters []Booster) CardSetDetails {
