@@ -23,12 +23,11 @@ import (
 	"ptcgpocket/source"
 )
 
-
 var userCollection collection.UserCollection = collection.UserCollection{
 	MissingCardNumbers: map[ref.CardSet]([]ref.CardSetNumber){
 		ref.CardSetGeneticApex: {
-			3, 4, 7, 10, 13, 20, 22, 32, 36, 39, 41, 47, 50, 56, 61, 69, 73, 76, 80, 84, 86, 89, 93, 95, 98, 101, 107, 117, 
-			123, 124, 145, 146, 148, 149, 159, 163, 166, 175, 177, 178, 185, 191, 195, 197, 202, 203, 204, 205, 221, 
+			3, 4, 7, 10, 13, 20, 22, 32, 36, 39, 41, 47, 50, 56, 61, 69, 73, 76, 80, 84, 86, 89, 93, 95, 98, 101, 107, 117,
+			123, 124, 145, 146, 148, 149, 159, 163, 166, 175, 177, 178, 185, 191, 195, 197, 202, 203, 204, 205, 221,
 			225, 226,
 			228, 229, 230, 231, 232, 233, 236, 237, 238, 240, 241, 242, 243, 244, 246, 248, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286,
 		},
@@ -37,10 +36,10 @@ var userCollection collection.UserCollection = collection.UserCollection{
 			71, 73, 75, 76, 79, 80, 81, 82, 83, 84, 85, 86,
 		},
 		ref.CardSetSpacetimeSmackdown: {
-			5, 6, 7, 18, 20, 22, 24, 29, 32, 33, 34, 36, 37, 41, 60, 65, 76, 79, 89, 90, 92, 94, 103, 104, 109, 113, 
+			5, 6, 7, 18, 20, 22, 24, 29, 32, 33, 34, 36, 37, 41, 60, 65, 76, 79, 89, 90, 92, 94, 103, 104, 109, 113,
 			117, 120, 123, 129, 147, 153,
-			156, 157, 158, 159, 160, 161, 162, 164, 166, 167, 168, 169, 170, 171, 172, 173, 176, 177, 178, 179, 
-			180, 181, 182, 183, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 200, 201, 202, 
+			156, 157, 158, 159, 160, 161, 162, 164, 166, 167, 168, 169, 170, 171, 172, 173, 176, 177, 178, 179,
+			180, 181, 182, 183, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 200, 201, 202,
 			203, 205, 206, 207,
 		},
 	},
@@ -195,7 +194,7 @@ func fetchBoosterDetails(booster source.BoosterDataSource, wg *sync.WaitGroup, r
 			if d.DataAtom == atom.Img {
 				imageNode = d
 			}
-			
+
 			dMatch := numRe.FindStringSubmatch(d.Data)
 			if dMatch != nil {
 				value, _ := strconv.ParseUint(dMatch[1], 10, 16)
@@ -244,16 +243,16 @@ func fetchBoosterDetails(booster source.BoosterDataSource, wg *sync.WaitGroup, r
 		}
 		srcAttr := imageNode.Attr[srcAttrIndex]
 		comps := strings.Split(srcAttr.Val, "/")
-		imageName := strings.Split(comps[len(comps) - 1], ".")[0]
+		imageName := strings.Split(comps[len(comps)-1], ".")[0]
 		imageNameRarities := map[string]*data.Rarity{
 			"diamond1": &data.RarityOneDiamond,
 			"diamond2": &data.RarityTwoDiamond,
 			"diamond3": &data.RarityThreeDiamond,
 			"diamond4": &data.RarityFourDiamond,
-			"star1": &data.RarityOneStar,
-			"star2": &data.RarityTwoStar,
-			"star3": &data.RarityThreeStar,
-			"crown": &data.RarityCrown,
+			"star1":    &data.RarityOneStar,
+			"star2":    &data.RarityTwoStar,
+			"star3":    &data.RarityThreeStar,
+			"crown":    &data.RarityCrown,
 		}
 		var rarity *data.Rarity = imageNameRarities[imageName]
 		if rarity == nil {
@@ -302,7 +301,7 @@ func fetchBoosterDetails(booster source.BoosterDataSource, wg *sync.WaitGroup, r
 
 	fmt.Printf("Booster %s total offerings (should = 500%%) %v\n", booster.Name, totalOffering)
 	results <- data.Booster{
-		Name: booster.Name,
+		Name:      booster.Name,
 		Offerings: offerings,
 	}
 }
@@ -374,7 +373,7 @@ func main() {
 			totalNonSecretCardsCollected,
 			setDetails.TotalNonSecretCards(),
 			totalSecretCardsCollected,
-			totalSecretCardsCollected + totalNonSecretCardsCollected,
+			totalSecretCardsCollected+totalNonSecretCardsCollected,
 			len(setDetails.Cards()),
 		)
 

@@ -10,7 +10,7 @@ type BoosterDataSource struct {
 }
 
 type CardSetDataSource struct {
-	Set ref.CardSet
+	Set            ref.CardSet
 	BoosterSources []BoosterDataSource
 }
 
