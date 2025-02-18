@@ -1,11 +1,34 @@
 package data
 
 import (
+	"fmt"
 	"iter"
-	"ptcgpocket/ref"
 	"slices"
 	"sort"
 )
+
+type CardSetId = string
+
+type BoosterOffering struct {
+	first3CardOffering float64
+	fourthCardOffering float64
+	fifthCardOffering  float64
+	rareOffering       float64
+}
+
+func NewBoosterOffering(
+	first3CardOffering float64,
+	fourthCardOffering float64,
+	fifthCardOffering float64,
+	rareOffering float64,
+) *BoosterOffering {
+	return &BoosterOffering{
+		first3CardOffering: first3CardOffering,
+		fourthCardOffering: fourthCardOffering,
+		fifthCardOffering:  fifthCardOffering,
+		rareOffering:       rareOffering,
+	}
+}
 
 type Rarity struct {
 	order    uint8
@@ -28,15 +51,19 @@ func (r *Rarity) IsSecret() bool {
 	return r.isSecret
 }
 
+type OfferingRatesTable map[*Rarity]BoosterOffering
+
+type CardSetNumber uint16
+
 type Card struct {
 	name   string
-	number ref.CardSetNumber
+	number CardSetNumber
 	rarity *Rarity
 }
 
 func NewCard(
 	name string,
-	number ref.CardSetNumber,
+	number CardSetNumber,
 	rarity *Rarity,
 ) Card {
 	return Card{name: name, number: number, rarity: rarity}
@@ -50,99 +77,130 @@ func (c *Card) Name() string {
 	return c.name
 }
 
-func (c *Card) Number() ref.CardSetNumber {
+func (c *Card) Number() CardSetNumber {
 	return c.number
 }
 
-type BoosterOffering struct {
-	card               Card
+type BoosterCardOffering struct {
+	card               *Card
 	first3CardOffering float64
 	fourthCardOffering float64
 	fifthCardOffering  float64
-	packProbability    float64
+	rareCardOffering   float64
 }
 
-func (b *BoosterOffering) Card() *Card {
-	return &b.card
+func (b *BoosterCardOffering) Card() *Card {
+	return b.card
 }
 
-func (b *BoosterOffering) First3CardOffering() float64 {
+func (b *BoosterCardOffering) First3CardOffering() float64 {
 	return b.first3CardOffering
 }
 
-func (b *BoosterOffering) FourthCardOffering() float64 {
+func (b *BoosterCardOffering) FourthCardOffering() float64 {
 	return b.fourthCardOffering
 }
 
-func (b *BoosterOffering) FifthCardOffering() float64 {
+func (b *BoosterCardOffering) FifthCardOffering() float64 {
 	return b.fifthCardOffering
 }
 
-func (b *BoosterOffering) PackProbability() float64 {
-	return b.packProbability
+func (b *BoosterCardOffering) RareCardOffering() float64 {
+	return b.rareCardOffering
+}
+
+func (b *BoosterCardOffering) RarePackOffering() float64 {
+	return b.rareCardOffering * 5
+}
+
+func (b *BoosterCardOffering) RegularPackOffering() float64 {
+	return b.first3CardOffering*3 + b.fourthCardOffering + b.fifthCardOffering
 }
 
 type Booster struct {
-	name      string
-	offerings []BoosterOffering
+	name          string
+	cards         []*Card
+	offeringRates OfferingRatesTable
 }
 
 func NewBooster(
 	name string,
-	offerings []BoosterOffering,
+	cards []*Card,
+	offeringRates OfferingRatesTable,
 ) Booster {
-	return Booster{name: name, offerings: offerings}
+	return Booster{name: name, cards: cards, offeringRates: offeringRates}
 }
 
 func (b *Booster) Name() string {
 	return b.name
 }
 
-func (b *Booster) Offerings() iter.Seq[BoosterOffering] {
-	return slices.Values(b.offerings)
+func (b *Booster) Offerings() iter.Seq[*BoosterCardOffering] {
+	offerings := make([]*BoosterCardOffering, len(b.cards))
+	for i, c := range b.cards {
+		offeringRef, offeringRefExists := b.offeringRates[c.Rarity()]
+		if !offeringRefExists {
+			m, _ := fmt.Printf("Offering rate not found for %v %v", b.name, c.Rarity().value)
+			panic(m)
+		}
+		offerings[i] = &BoosterCardOffering{
+			card:               c,
+			first3CardOffering: offeringRef.first3CardOffering,
+			fourthCardOffering: offeringRef.fourthCardOffering,
+			fifthCardOffering:  offeringRef.fifthCardOffering,
+			rareCardOffering:   offeringRef.rareOffering,
+		}
+	}
+	return slices.Values(offerings)
 }
 
-type CardSetDetails struct {
-	set                 ref.CardSet
-	boosters            []Booster
-	cards               []Card
+type CardSet struct {
+	id                  CardSetId
+	name                string
+	boosters            []*Booster
+	cards               []*Card
 	totalNonSecretCards uint16
 	totalSecretCards    uint16
 }
 
-func (c *CardSetDetails) Set() *ref.CardSet {
-	return &c.set
+func (s *CardSet) Id() CardSetId {
+	return s.id
 }
 
-func (c *CardSetDetails) Cards() iter.Seq[Card] {
+func (s *CardSet) Name() string {
+	return s.name
+}
+
+func (c *CardSet) Cards() iter.Seq[*Card] {
 	return slices.Values(c.cards)
 }
 
-func (c *CardSetDetails) Boosters() iter.Seq[Booster] {
+func (c *CardSet) Boosters() iter.Seq[*Booster] {
 	return slices.Values(c.boosters)
 }
 
-func (c *CardSetDetails) TotalNonSecretCards() uint16 {
+func (c *CardSet) TotalNonSecretCards() uint16 {
 	return c.totalNonSecretCards
 }
 
-func (c *CardSetDetails) TotalSecretCards() uint16 {
+func (c *CardSet) TotalSecretCards() uint16 {
 	return c.totalSecretCards
 }
 
-func (c *CardSetDetails) TotalCards() uint16 {
+func (c *CardSet) TotalCards() uint16 {
 	return uint16(len(c.cards))
 }
 
-func NewCardSetDetails(set ref.CardSet, boosters []Booster) CardSetDetails {
-	var cards []Card
+func NewCardSet(
+	id CardSetId,
+	name string, boosters []*Booster) CardSet {
+	var cards []*Card
 	for _, b := range boosters {
-		for _, o := range b.offerings {
+		for _, c := range b.cards {
 			// TODO: More efficient way than this. e.g. card number
 			// TODO: Validate that cards with same number are the same
-			card := o.Card()
-			if !slices.Contains(cards, *card) {
-				cards = append(cards, *card)
+			if !slices.Contains(cards, c) {
+				cards = append(cards, c)
 			}
 		}
 	}
@@ -157,26 +215,12 @@ func NewCardSetDetails(set ref.CardSet, boosters []Booster) CardSetDetails {
 		}
 	}
 
-	return CardSetDetails{
-		set:                 set,
+	return CardSet{
+		id:                  id,
+		name:                name,
 		boosters:            boosters,
 		cards:               cards,
 		totalSecretCards:    totalSecretCards,
 		totalNonSecretCards: uint16(len(cards)) - totalSecretCards,
-	}
-}
-
-func NewBoosterOffering(
-	card Card,
-	first3CardProbability float64,
-	fourthCardProbability float64,
-	fifthCardProbability float64,
-) BoosterOffering {
-	return BoosterOffering{
-		card:               card,
-		first3CardOffering: first3CardProbability,
-		fourthCardOffering: fourthCardProbability,
-		fifthCardOffering:  fifthCardProbability,
-		packProbability:    first3CardProbability*3 + fourthCardProbability + fifthCardProbability,
 	}
 }

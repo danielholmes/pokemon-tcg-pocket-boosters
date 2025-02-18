@@ -2,70 +2,70 @@ package source
 
 import (
 	"iter"
-	"ptcgpocket/ref"
+	"ptcgpocket/data"
 	"slices"
 )
 
-type offeringFix [3]float64
-
-type BoosterDataSource struct {
-	name                 string
-	serebiiUrl           string
-	serebiiOfferingFixes map[ref.CardSetNumber]offeringFix
+type BoosterSerebiiSource struct {
+	name          string
+	serebiiUrl    string
+	offeringRates data.OfferingRatesTable
 }
 
-func (b *BoosterDataSource) Name() string {
+func NewBoosterSerebiiSource(
+	name string,
+	serebiiUrl string,
+	offeringRates data.OfferingRatesTable,
+) *BoosterSerebiiSource {
+	return &BoosterSerebiiSource{
+		name:          name,
+		serebiiUrl:    serebiiUrl,
+		offeringRates: offeringRates,
+	}
+}
+
+func (b *BoosterSerebiiSource) Name() string {
 	return b.name
 }
 
-func (b *BoosterDataSource) SerebiiUrl() string {
+func (b *BoosterSerebiiSource) SerebiiUrl() string {
 	return b.serebiiUrl
 }
 
-func (b *BoosterDataSource) OfferingFixForNumber(number ref.CardSetNumber) (offeringFix, bool) {
-	value, exists := b.serebiiOfferingFixes[number]
-	return value, exists
+func (b *BoosterSerebiiSource) OfferingRates() data.OfferingRatesTable {
+	return b.offeringRates
 }
 
-type CardSetDataSource struct {
-	set            ref.CardSet
-	boosterSources []BoosterDataSource
+type CardSetSerebiiSource struct {
+	id             string
+	name           string
+	boosterSources []*BoosterSerebiiSource
 }
 
-func (s *CardSetDataSource) Set() ref.CardSet {
-	return s.set
+func NewCardSetSerebiiSource(
+	id string,
+	name string,
+	boosterSources []*BoosterSerebiiSource,
+) *CardSetSerebiiSource {
+	return &CardSetSerebiiSource{
+		id:             id,
+		name:           name,
+		boosterSources: boosterSources,
+	}
 }
 
-func (s *CardSetDataSource) BoosterSources() iter.Seq[BoosterDataSource] {
+func (s *CardSetSerebiiSource) Id() string {
+	return s.id
+}
+
+func (s *CardSetSerebiiSource) Name() string {
+	return s.name
+}
+
+func (s *CardSetSerebiiSource) BoosterSources() iter.Seq[*BoosterSerebiiSource] {
 	return slices.Values(s.boosterSources)
 }
 
-func (s *CardSetDataSource) NumBoosterSources() uint8 {
+func (s *CardSetSerebiiSource) NumBoosterSources() uint8 {
 	return uint8(len(s.boosterSources))
-}
-
-var CardSetDataSources = [...]CardSetDataSource{
-	{
-		set: ref.CardSetGeneticApex,
-		boosterSources: []BoosterDataSource{
-			{name: "Pikachu", serebiiUrl: "https://www.serebii.net/tcgpocket/geneticapex/pikachu.shtml"},
-			{name: "MewTwo", serebiiUrl: "https://www.serebii.net/tcgpocket/geneticapex/mewtwo.shtml"},
-			{name: "Charizard", serebiiUrl: "https://www.serebii.net/tcgpocket/geneticapex/charizard.shtml"},
-		},
-	},
-	{
-		set: ref.CardSetMythicalIsland,
-		boosterSources: []BoosterDataSource{
-			{name: "Mew", serebiiOfferingFixes: map[ref.CardSetNumber]offeringFix{
-				71: {0.0, 0.428, 1.714},
-			}, serebiiUrl: "https://www.serebii.net/tcgpocket/mythicalisland/mew.shtml"},
-		},
-	},
-	{
-		set: ref.CardSetSpacetimeSmackdown,
-		boosterSources: []BoosterDataSource{
-			{name: "Dialga", serebiiUrl: "https://www.serebii.net/tcgpocket/space-timesmackdown/dialga.shtml"},
-			{name: "Palkia", serebiiUrl: "https://www.serebii.net/tcgpocket/space-timesmackdown/palkia.shtml"},
-		},
-	},
 }

@@ -17,7 +17,6 @@ go run main.go
 
 ## TODO
 
+ - Check why rare is off in audit
  - Use errorgroup
- - Mythical Island data audit fails. Find all irregularities or find another data source
- - Include rare packs probabilities
  - Make missing card #s configurable - not hardcoded
