@@ -17,7 +17,7 @@ go run main.go
 
 ## TODO
 
- - Show % totals for 1st, 2nd, etc probabilities to make sure works
  - Use errorgroup
+ - Mythical Island data audit fails. Find all irregularities or find another data source
  - Include rare packs probabilities
  - Make missing card #s configurable - not hardcoded

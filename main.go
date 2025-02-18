@@ -23,8 +23,8 @@ import (
 	"ptcgpocket/source"
 )
 
-var userCollection collection.UserCollection = collection.UserCollection{
-	MissingCardNumbers: map[ref.CardSet]([]ref.CardSetNumber){
+var userCollection collection.UserCollection = collection.NewUserCollection(
+	map[ref.CardSet]([]ref.CardSetNumber){
 		ref.CardSetGeneticApex: {
 			3, 4, 7, 10, 13, 22, 32, 36, 39, 41, 47, 50, 56, 61, 69, 73, 76, 80, 84, 89, 93, 95, 98, 101, 107, 117,
 			123, 124, 145, 146, 148, 149, 159, 163, 166, 175, 177, 178, 185, 191, 195, 197, 202, 203, 204, 205, 221,
@@ -43,7 +43,7 @@ var userCollection collection.UserCollection = collection.UserCollection{
 			203, 205, 206, 207,
 		},
 	},
-}
+)
 
 func fetchUrl(url string) (string, error) {
 	resp, err := http.Get(url)
@@ -111,7 +111,7 @@ func readFileIfExists(filename string) string {
 }
 
 func fetchBoosterFile(booster source.BoosterDataSource) (string, error) {
-	parsed, uErr := url.Parse(booster.SerebiiUrl)
+	parsed, uErr := url.Parse(booster.SerebiiUrl())
 	if uErr != nil {
 		return "", fmt.Errorf("error parsing URL: %v", uErr)
 	}
@@ -127,8 +127,8 @@ func fetchBoosterFile(booster source.BoosterDataSource) (string, error) {
 		return fileBody, nil
 	}
 
-	fmt.Printf("No cached file found for %v, fetching %v\n", booster.Name, booster.SerebiiUrl)
-	var body, err = fetchUrl(booster.SerebiiUrl)
+	fmt.Printf("No cached file found for %v, fetching %v\n", booster.Name(), booster.SerebiiUrl())
+	var body, err = fetchUrl(booster.SerebiiUrl())
 	if err != nil {
 		return "", err
 	}
@@ -172,7 +172,6 @@ func fetchBoosterDetails(booster source.BoosterDataSource, wg *sync.WaitGroup, r
 	rows := getImmediateRows(table)
 
 	offerings := make([]data.BoosterOffering, len(rows))
-	totalOffering := 0.0
 	for i, r := range rows {
 		cells := []*html.Node{}
 		for c := range r.ChildNodes() {
@@ -260,58 +259,68 @@ func fetchBoosterDetails(booster source.BoosterDataSource, wg *sync.WaitGroup, r
 			return
 		}
 
+		offeringFix, offeringFixExists := booster.OfferingFixForNumber(number)
+
 		// 1-3 probability
-		var firstThreeRarity float64
-		firstThreeCell := cells[4].FirstChild
-		if firstThreeCell != nil {
-			rawRarity := firstThreeCell.Data
-			firstThreeRarity, _ = strconv.ParseFloat(rawRarity[:len(rawRarity)-1], 64)
+		var firstThreeOffering float64
+		if offeringFixExists {
+			firstThreeOffering = offeringFix[0]
+		} else {
+			firstThreeCell := cells[4].FirstChild
+			if firstThreeCell != nil {
+				rawRarity := firstThreeCell.Data
+				firstThreeOffering, _ = strconv.ParseFloat(rawRarity[:len(rawRarity)-1], 64)
+			}
 		}
 
 		// 4 probability
-		var fourthRarity float64
-		fourthCell := cells[5].FirstChild
-		if fourthCell != nil {
-			rawRarity := fourthCell.Data
-			fourthRarity, _ = strconv.ParseFloat(rawRarity[:len(rawRarity)-1], 64)
+		var fourthOffering float64
+		if offeringFixExists {
+			fourthOffering = offeringFix[1]
+		} else {
+			fourthCell := cells[5].FirstChild
+			if fourthCell != nil {
+				rawRarity := fourthCell.Data
+				fourthOffering, _ = strconv.ParseFloat(rawRarity[:len(rawRarity)-1], 64)
+			}
 		}
 
 		// 5 probability
-		var fifthRarity float64
-		fifthCell := cells[6].FirstChild
-		if fourthCell != nil {
-			rawRarity := fifthCell.Data
-			fifthRarity, _ = strconv.ParseFloat(rawRarity[:len(rawRarity)-1], 64)
+		var fifthOffering float64
+		if offeringFixExists {
+			fifthOffering = offeringFix[2]
+		} else {
+			fifthCell := cells[6].FirstChild
+			if fifthCell != nil {
+				rawRarity := fifthCell.Data
+				fifthOffering, _ = strconv.ParseFloat(rawRarity[:len(rawRarity)-1], 64)
+			}
 		}
 
-		offering := data.NewBoosterOffering(
-			data.Card{
-				Name:   name,
-				Number: number,
-				Rarity: rarity,
-			},
-			firstThreeRarity,
-			fourthRarity,
-			fifthRarity,
+		offerings[i] = data.NewBoosterOffering(
+			data.NewCard(
+				name,
+				number,
+				rarity,
+			),
+			firstThreeOffering,
+			fourthOffering,
+			fifthOffering,
 		)
-		offerings[i] = offering
-
-		totalOffering += offering.PackProbability
 	}
 
-	fmt.Printf("Booster %s total offerings (should = 500%%) %v\n", booster.Name, totalOffering)
-	results <- data.Booster{
-		Name:      booster.Name,
-		Offerings: offerings,
-	}
+	results <- data.NewBooster(
+		booster.Name(),
+		offerings,
+	)
 }
 
 func fetchCardSetDetails(s source.CardSetDataSource, wg *sync.WaitGroup, results chan<- data.CardSetDetails) {
 	defer wg.Done()
 
 	var bwg sync.WaitGroup
-	boosterResults := make(chan data.Booster, len(s.BoosterSources))
-	for _, s := range s.BoosterSources {
+	boosterResults := make(chan data.Booster, s.NumBoosterSources())
+	for s := range s.BoosterSources() {
 		bwg.Add(1)
 		go fetchBoosterDetails(s, &bwg, boosterResults)
 	}
@@ -324,7 +333,7 @@ func fetchCardSetDetails(s source.CardSetDataSource, wg *sync.WaitGroup, results
 		collectedResults = append(collectedResults, o)
 	}
 
-	results <- data.NewCardSetDetails(s.Set, collectedResults)
+	results <- data.NewCardSetDetails(s.Set(), collectedResults)
 }
 
 func main() {
@@ -339,16 +348,45 @@ func main() {
 	wg.Wait()
 	close(results)
 
-	var collectedResults []data.CardSetDetails
+	var cardDetails []data.CardSetDetails
 	for o := range results {
-		collectedResults = append(collectedResults, o)
+		cardDetails = append(cardDetails, o)
 	}
 
-	for set, missing := range userCollection.MissingCardNumbers {
-		fmt.Printf("# %v\n", set.Name())
+	// Show check of booster probabilities
+	fmt.Println("# Booster gathered data audit")
+	for _, c := range cardDetails {
+		for b := range c.Boosters() {
+			totalOffering := 0.0
+			totalFirstToThirdOffering := 0.0
+			totalFourthOffering := 0.0
+			totalFifthOffering := 0.0
+			for o := range b.Offerings() {
+				totalOffering += o.PackProbability()
+				totalFirstToThirdOffering += o.First3CardOffering()
+				totalFourthOffering += o.FourthCardOffering()
+				totalFifthOffering += o.FifthCardOffering()
+			}
+			fmt.Printf(
+				" ## %v - %v\n   1-3: %.2f / 100%%\n   4: %.2f / 100%%\n   5: %.2f / 100%%\n   total: %.2f / 500%%\n",
+				c.Set().Name(),
+				b.Name(),
+				totalFirstToThirdOffering,
+				totalFourthOffering,
+				totalFifthOffering,
+				totalOffering,
+			)
+		}
+	}
+
+	// Show collection
+	fmt.Println()
+	fmt.Println("# Current collection")
+	for set, missing := range userCollection.MissingCardNumbers() {
+		fmt.Printf(" ## %v\n", set.Name())
 		var setDetails *data.CardSetDetails
-		for _, d := range collectedResults {
-			if d.Set == set {
+		for _, d := range cardDetails {
+			if *d.Set() == set {
 				setDetails = &d
 			}
 		}
@@ -356,12 +394,11 @@ func main() {
 			panic(fmt.Sprintf("no set details for %v", set.Name()))
 		}
 
-		// Collection
 		totalSecretCardsCollected := 0
 		totalNonSecretCardsCollected := 0
 		for c := range setDetails.Cards() {
-			if !slices.Contains(missing, c.Number) {
-				if c.Rarity.IsSecret() {
+			if !slices.Contains(missing, c.Number()) {
+				if c.Rarity().IsSecret() {
 					totalSecretCardsCollected += 1
 				} else {
 					totalNonSecretCardsCollected += 1
@@ -370,7 +407,7 @@ func main() {
 		}
 		totalCollectedIncludingSecrets := totalSecretCardsCollected + totalNonSecretCardsCollected
 		fmt.Printf(
-			" Collection %v / %v (%v%%) %v★ Inc. secret %v / %v (%v%%)\n",
+			"    %v / %v (%v%%) %v★ Inc. secret %v / %v (%v%%)\n",
 			totalNonSecretCardsCollected,
 			setDetails.TotalNonSecretCards(),
 			100*totalNonSecretCardsCollected/int(setDetails.TotalNonSecretCards()),
@@ -379,19 +416,34 @@ func main() {
 			setDetails.TotalCards(),
 			100*(totalSecretCardsCollected+totalNonSecretCardsCollected)/int(setDetails.TotalCards()),
 		)
+	}
 
-		// Boosters
+	// Show booster values
+	fmt.Println()
+	fmt.Println("# Booster values")
+	for set, missing := range userCollection.MissingCardNumbers() {
+		fmt.Printf(" ## %v\n", set.Name())
+		var setDetails *data.CardSetDetails
+		for _, d := range cardDetails {
+			if *d.Set() == set {
+				setDetails = &d
+			}
+		}
+		if setDetails == nil {
+			panic(fmt.Sprintf("no set details for %v", set.Name()))
+		}
+
 		for b := range setDetails.Boosters() {
-			fmt.Printf("  ## Booster %v\n", b.Name)
+			fmt.Printf("  ### %v\n", b.Name())
 
 			totalOfferingMissing := 0.0
-			for _, o := range b.Offerings {
-				if slices.Contains(missing, o.Card.Number) {
-					totalOfferingMissing += o.PackProbability
+			for o := range b.Offerings() {
+				if slices.Contains(missing, o.Card().Number()) {
+					totalOfferingMissing += o.PackProbability()
 					// fmt.Printf("  Offers missing %v) %v => %v\n", c.card.number, c.card.name, c.offering)
 				}
 			}
-			fmt.Printf("   Total chance of receiving a missing %v%%\n", totalOfferingMissing)
+			fmt.Printf("   Total chance of receiving a missing %.2f%%\n", totalOfferingMissing)
 		}
 	}
 }

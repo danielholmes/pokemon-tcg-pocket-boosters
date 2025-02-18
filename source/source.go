@@ -1,39 +1,71 @@
 package source
 
 import (
+	"iter"
 	"ptcgpocket/ref"
+	"slices"
 )
 
+type offeringFix [3]float64
+
 type BoosterDataSource struct {
-	Name       string
-	SerebiiUrl string
+	name                 string
+	serebiiUrl           string
+	serebiiOfferingFixes map[ref.CardSetNumber]offeringFix
+}
+
+func (b *BoosterDataSource) Name() string {
+	return b.name
+}
+
+func (b *BoosterDataSource) SerebiiUrl() string {
+	return b.serebiiUrl
+}
+
+func (b *BoosterDataSource) OfferingFixForNumber(number ref.CardSetNumber) (offeringFix, bool) {
+	value, exists := b.serebiiOfferingFixes[number]
+	return value, exists
 }
 
 type CardSetDataSource struct {
-	Set            ref.CardSet
-	BoosterSources []BoosterDataSource
+	set            ref.CardSet
+	boosterSources []BoosterDataSource
+}
+
+func (s *CardSetDataSource) Set() ref.CardSet {
+	return s.set
+}
+
+func (s *CardSetDataSource) BoosterSources() iter.Seq[BoosterDataSource] {
+	return slices.Values(s.boosterSources)
+}
+
+func (s *CardSetDataSource) NumBoosterSources() uint8 {
+	return uint8(len(s.boosterSources))
 }
 
 var CardSetDataSources = [...]CardSetDataSource{
 	{
-		Set: ref.CardSetGeneticApex,
-		BoosterSources: []BoosterDataSource{
-			{Name: "Pikachu", SerebiiUrl: "https://www.serebii.net/tcgpocket/geneticapex/pikachu.shtml"},
-			{Name: "MewTwo", SerebiiUrl: "https://www.serebii.net/tcgpocket/geneticapex/mewtwo.shtml"},
-			{Name: "Charizard", SerebiiUrl: "https://www.serebii.net/tcgpocket/geneticapex/charizard.shtml"},
+		set: ref.CardSetGeneticApex,
+		boosterSources: []BoosterDataSource{
+			{name: "Pikachu", serebiiUrl: "https://www.serebii.net/tcgpocket/geneticapex/pikachu.shtml"},
+			{name: "MewTwo", serebiiUrl: "https://www.serebii.net/tcgpocket/geneticapex/mewtwo.shtml"},
+			{name: "Charizard", serebiiUrl: "https://www.serebii.net/tcgpocket/geneticapex/charizard.shtml"},
 		},
 	},
 	{
-		Set: ref.CardSetMythicalIsland,
-		BoosterSources: []BoosterDataSource{
-			{Name: "Mew", SerebiiUrl: "https://www.serebii.net/tcgpocket/mythicalisland/mew.shtml"},
+		set: ref.CardSetMythicalIsland,
+		boosterSources: []BoosterDataSource{
+			{name: "Mew", serebiiOfferingFixes: map[ref.CardSetNumber]offeringFix{
+				71: {0.0, 0.428, 1.714},
+			}, serebiiUrl: "https://www.serebii.net/tcgpocket/mythicalisland/mew.shtml"},
 		},
 	},
 	{
-		Set: ref.CardSetSpacetimeSmackdown,
-		BoosterSources: []BoosterDataSource{
-			{Name: "Dialga", SerebiiUrl: "https://www.serebii.net/tcgpocket/space-timesmackdown/dialga.shtml"},
-			{Name: "Palkia", SerebiiUrl: "https://www.serebii.net/tcgpocket/space-timesmackdown/palkia.shtml"},
+		set: ref.CardSetSpacetimeSmackdown,
+		boosterSources: []BoosterDataSource{
+			{name: "Dialga", serebiiUrl: "https://www.serebii.net/tcgpocket/space-timesmackdown/dialga.shtml"},
+			{name: "Palkia", serebiiUrl: "https://www.serebii.net/tcgpocket/space-timesmackdown/palkia.shtml"},
 		},
 	},
 }
