@@ -7,25 +7,32 @@ import (
 )
 
 type BoosterSerebiiSource struct {
-	name          string
-	serebiiUrl    string
-	offeringRates data.OfferingRatesTable
+	name                        string
+	serebiiUrl                  string
+	offeringRates               data.OfferingRatesTable
+	crownExclusiveCardSetNumber data.CardSetNumber
 }
 
 func NewBoosterSerebiiSource(
 	name string,
 	serebiiUrl string,
 	offeringRates data.OfferingRatesTable,
+	crownExclusiveCardSetNumber data.CardSetNumber,
 ) *BoosterSerebiiSource {
 	return &BoosterSerebiiSource{
-		name:          name,
-		serebiiUrl:    serebiiUrl,
-		offeringRates: offeringRates,
+		name:                        name,
+		serebiiUrl:                  serebiiUrl,
+		offeringRates:               offeringRates,
+		crownExclusiveCardSetNumber: crownExclusiveCardSetNumber,
 	}
 }
 
 func (b *BoosterSerebiiSource) Name() string {
 	return b.name
+}
+
+func (b *BoosterSerebiiSource) CrownExclusiveCardSetNumber() data.CardSetNumber {
+	return b.crownExclusiveCardSetNumber
 }
 
 func (b *BoosterSerebiiSource) SerebiiUrl() string {

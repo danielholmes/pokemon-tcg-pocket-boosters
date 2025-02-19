@@ -17,6 +17,5 @@ go run main.go
 
 ## TODO
 
- - Check why rare is off in audit
  - Use errorgroup
  - Make missing card #s configurable - not hardcoded

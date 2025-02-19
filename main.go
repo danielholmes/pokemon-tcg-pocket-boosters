@@ -28,6 +28,7 @@ var cardSetDataSources = [...]*source.CardSetSerebiiSource{
 					&data.RarityThreeStar:    *data.NewBoosterOffering(0, 0.222, 0.888, 5.0),
 					&data.RarityCrown:        *data.NewBoosterOffering(0, 0.013, 0.053, 5.0),
 				},
+				285,
 			),
 			source.NewBoosterSerebiiSource(
 				"MewTwo",
@@ -42,6 +43,7 @@ var cardSetDataSources = [...]*source.CardSetSerebiiSource{
 					&data.RarityThreeStar:    *data.NewBoosterOffering(0, 0.222, 0.888, 5.263),
 					&data.RarityCrown:        *data.NewBoosterOffering(0, 0.013, 0.053, 5.263),
 				},
+				286,
 			),
 			source.NewBoosterSerebiiSource(
 				"Charizard",
@@ -56,6 +58,7 @@ var cardSetDataSources = [...]*source.CardSetSerebiiSource{
 					&data.RarityThreeStar:    *data.NewBoosterOffering(0, 0.222, 0.888, 5.0),
 					&data.RarityCrown:        *data.NewBoosterOffering(0, 0.013, 0.053, 5.0),
 				},
+				284,
 			),
 		},
 	),
@@ -76,6 +79,7 @@ var cardSetDataSources = [...]*source.CardSetSerebiiSource{
 					&data.RarityThreeStar:    *data.NewBoosterOffering(0, 0.222, 0.888, 5.555),
 					&data.RarityCrown:        *data.NewBoosterOffering(0, 0.040, 0.160, 5.555),
 				},
+				86,
 			),
 		},
 	),
@@ -96,6 +100,7 @@ var cardSetDataSources = [...]*source.CardSetSerebiiSource{
 					&data.RarityThreeStar:    *data.NewBoosterOffering(0, 0.222, 0.888, 3.846),
 					&data.RarityCrown:        *data.NewBoosterOffering(0, 0.020, 0.080, 3.846),
 				},
+				207,
 			),
 			source.NewBoosterSerebiiSource(
 				"Palkia",
@@ -110,6 +115,7 @@ var cardSetDataSources = [...]*source.CardSetSerebiiSource{
 					&data.RarityThreeStar:    *data.NewBoosterOffering(0, 0.222, 0.888, 3.846),
 					&data.RarityCrown:        *data.NewBoosterOffering(0, 0.020, 0.080, 3.846),
 				},
+				206,
 			),
 		},
 	),
@@ -128,7 +134,7 @@ var userCollection collection.UserCollection = collection.NewUserCollection(
 			71, 73, 75, 76, 79, 80, 81, 82, 83, 84, 85, 86,
 		},
 		"space-time-smackdown": {
-			5, 7, 18, 20, 22, 24, 29, 32, 33, 34, 36, 37, 41, 60, 65, 76, 79, 89, 90, 92, 94, 103, 104, 109, 113,
+			5, 7, 18, 20, 22, 24, 29, 32, 33, 34, 36, 37, 41, 60, 65, 76, 79, 89, 90, 92, 94, 104, 109, 113,
 			117, 120, 123, 129, 147, 153,
 			156, 157, 158, 159, 160, 161, 162, 164, 166, 167, 168, 169, 170, 171, 172, 173, 176, 177, 178, 179,
 			180, 181, 182, 183, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 200, 201, 202,

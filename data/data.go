@@ -118,17 +118,19 @@ func (b *BoosterCardOffering) RegularPackOffering() float64 {
 }
 
 type Booster struct {
-	name          string
-	cards         []*Card
-	offeringRates OfferingRatesTable
+	name                        string
+	cards                       []*Card
+	offeringRates               OfferingRatesTable
+	crownExclusiveCardSetNumber CardSetNumber
 }
 
 func NewBooster(
 	name string,
 	cards []*Card,
 	offeringRates OfferingRatesTable,
+	crownExclusiveCardSetNumber CardSetNumber,
 ) Booster {
-	return Booster{name: name, cards: cards, offeringRates: offeringRates}
+	return Booster{name: name, cards: cards, offeringRates: offeringRates, crownExclusiveCardSetNumber: crownExclusiveCardSetNumber}
 }
 
 func (b *Booster) Name() string {
@@ -143,12 +145,16 @@ func (b *Booster) Offerings() iter.Seq[*BoosterCardOffering] {
 			m, _ := fmt.Printf("Offering rate not found for %v %v", b.name, c.Rarity().value)
 			panic(m)
 		}
+		rareCardOffering := 0.0
+		if c.Rarity() != &RarityCrown || c.number == b.crownExclusiveCardSetNumber {
+			rareCardOffering = offeringRef.rareOffering
+		}
 		offerings[i] = &BoosterCardOffering{
 			card:               c,
 			first3CardOffering: offeringRef.first3CardOffering,
 			fourthCardOffering: offeringRef.fourthCardOffering,
 			fifthCardOffering:  offeringRef.fifthCardOffering,
-			rareCardOffering:   offeringRef.rareOffering,
+			rareCardOffering:   rareCardOffering,
 		}
 	}
 	return slices.Values(offerings)

@@ -245,6 +245,7 @@ func fetchBoosterDetails(booster *BoosterSerebiiSource, wg *sync.WaitGroup, resu
 		booster.Name(),
 		cards,
 		booster.OfferingRates(),
+		booster.CrownExclusiveCardSetNumber(),
 	)
 }
 
