@@ -1,6 +1,7 @@
 package source
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -13,10 +14,10 @@ import (
 	"slices"
 	"strconv"
 	"strings"
-	"sync"
 
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
+	"golang.org/x/sync/errgroup"
 )
 
 func fetchUrl(url string) (string, error) {
@@ -121,26 +122,21 @@ func fetchBoosterFile(booster *BoosterSerebiiSource) (string, error) {
 	return body, nil
 }
 
-func fetchBoosterDetails(booster *BoosterSerebiiSource, wg *sync.WaitGroup, results chan<- data.Booster) {
-	defer wg.Done()
-
+func fetchBoosterDetails(booster *BoosterSerebiiSource, results chan<- data.Booster) error {
 	var body, err = fetchBoosterFile(booster)
 	// TODO: Find idiomatic way to handle go routine errors
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 
 	var doc, dErr = html.Parse(strings.NewReader(body))
 	if dErr != nil {
-		fmt.Println(dErr)
-		return
+		return dErr
 	}
 
 	var table, tErr = getOnlyDexTable(doc)
 	if tErr != nil {
-		fmt.Println(tErr)
-		return
+		return tErr
 	}
 
 	rows := getImmediateRows(table)
@@ -155,8 +151,7 @@ func fetchBoosterDetails(booster *BoosterSerebiiSource, wg *sync.WaitGroup, resu
 		}
 
 		if len(cells) != 7 {
-			fmt.Printf("Expected 7 cells in booster row (got %v) %v\n", len(cells), r)
-			return
+			return fmt.Errorf("expected 7 cells in booster row (got %v) %v", len(cells), r)
 		}
 
 		// Number
@@ -197,22 +192,19 @@ func fetchBoosterDetails(booster *BoosterSerebiiSource, wg *sync.WaitGroup, resu
 			}
 		}
 		if name == "" {
-			fmt.Println("No name")
-			return
+			return errors.New("no name")
 		}
 
 		// rarity
 		// diamond1 diamond2 diamond3 diamond4 star1 star2 star3 crown
 		if imageNode == nil {
-			fmt.Printf("no img found %v) %v\n", number, name)
-			return
+			return fmt.Errorf("no img found %v) %v", number, name)
 		}
 		srcAttrIndex := slices.IndexFunc(imageNode.Attr, func(a html.Attribute) bool {
 			return a.Key == "src"
 		})
 		if srcAttrIndex == -1 {
-			fmt.Printf("no img src found %v) %v\n", number, name)
-			return
+			return fmt.Errorf("no img src found %v) %v", number, name)
 		}
 		srcAttr := imageNode.Attr[srcAttrIndex]
 		comps := strings.Split(srcAttr.Val, "/")
@@ -229,12 +221,11 @@ func fetchBoosterDetails(booster *BoosterSerebiiSource, wg *sync.WaitGroup, resu
 		}
 		var rarity *data.Rarity = imageNameRarities[imageName]
 		if rarity == nil {
-			fmt.Printf("no rarity found for image name %v\n", imageName)
-			return
+			return fmt.Errorf("no rarity found for image name %v", imageName)
 		}
 
 		card := data.NewCard(
-			name,
+			data.NewBaseCard(name, 0),
 			number,
 			rarity,
 		)
@@ -247,25 +238,30 @@ func fetchBoosterDetails(booster *BoosterSerebiiSource, wg *sync.WaitGroup, resu
 		booster.OfferingRates(),
 		booster.CrownExclusiveCardSetNumber(),
 	)
+	return nil
 }
 
-func FetchCardSetDetails(s *CardSetSerebiiSource, wg *sync.WaitGroup, results chan<- data.CardSet) {
-	defer wg.Done()
+func FetchCardSetDetails(ctx context.Context, s *CardSetSerebiiSource, results chan<- data.CardSet) error {
+	g, _ := errgroup.WithContext(ctx)
 
-	var bwg sync.WaitGroup
 	boosterResults := make(chan data.Booster, s.NumBoosterSources())
 	for s := range s.BoosterSources() {
-		bwg.Add(1)
-		go fetchBoosterDetails(s, &bwg, boosterResults)
+		g.Go(func() error {
+			return fetchBoosterDetails(s, boosterResults)
+		})
+	}
+	err := g.Wait()
+	if err != nil {
+		return err
 	}
 
-	bwg.Wait()
 	close(boosterResults)
 
-	var collectedResults []*data.Booster
+	var boosters []*data.Booster
 	for o := range boosterResults {
-		collectedResults = append(collectedResults, &o)
+		boosters = append(boosters, &o)
 	}
 
-	results <- data.NewCardSet(s.Id(), s.Name(), collectedResults)
+	results <- data.NewCardSet(s.Id(), s.Name(), boosters)
+	return nil
 }

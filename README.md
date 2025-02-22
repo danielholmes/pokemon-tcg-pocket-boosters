@@ -17,5 +17,4 @@ go run main.go
 
 ## TODO
 
- - Use errorgroup
  - Make missing card #s configurable - not hardcoded

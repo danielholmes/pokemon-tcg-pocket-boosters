@@ -53,28 +53,48 @@ func (r *Rarity) IsSecret() bool {
 
 type OfferingRatesTable map[*Rarity]BoosterOffering
 
+type BaseCard struct {
+	name   string
+	health uint8
+	// retreatCost
+	// moves
+	// type
+}
+
+func NewBaseCard(name string, health uint8) *BaseCard {
+	return &BaseCard{name: name, health: health}
+}
+
+func (c *BaseCard) Name() string {
+	return c.name
+}
+
 type CardSetNumber uint16
 
 type Card struct {
-	name   string
+	core   *BaseCard
 	number CardSetNumber
 	rarity *Rarity
 }
 
 func NewCard(
-	name string,
+	core *BaseCard,
 	number CardSetNumber,
 	rarity *Rarity,
 ) Card {
-	return Card{name: name, number: number, rarity: rarity}
+	return Card{core: core, number: number, rarity: rarity}
+}
+
+func (c *Card) Base() *BaseCard {
+	return c.core
+}
+
+func (c *Card) Name() string {
+	return c.core.name
 }
 
 func (c *Card) Rarity() *Rarity {
 	return c.rarity
-}
-
-func (c *Card) Name() string {
-	return c.name
 }
 
 func (c *Card) Number() CardSetNumber {
@@ -203,9 +223,7 @@ func NewCardSet(
 	var cards []*Card
 	for _, b := range boosters {
 		for _, c := range b.cards {
-			// TODO: More efficient way than this. e.g. card number
-			// TODO: Validate that cards with same number are the same
-			if !slices.Contains(cards, c) {
+			if !slices.ContainsFunc(cards, func(c2 *Card) bool { return c2.number == c.number }) {
 				cards = append(cards, c)
 			}
 		}
