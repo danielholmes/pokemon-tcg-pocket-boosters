@@ -174,29 +174,23 @@ func fetchBoosterDetails(booster *BoosterSerebiiSource, results chan<- data.Boos
 		var name string
 		for d := range cells[2].Descendants() {
 			if d.DataAtom == atom.A {
-				nameParent := d
-
-				// Look for font
-				for c := range d.ChildNodes() {
-					if c.DataAtom == atom.Font {
-						nameParent = c
+				var nameComponents []string
+				for c := range d.Descendants() {
+					if c.DataAtom == 0 {
+						comp := strings.TrimSpace(c.Data)
+						if comp != "" {
+							nameComponents = append(nameComponents, comp)
+						}
 					}
 				}
-
-				// No font, fallback is root
-				if nameParent == nil {
-					nameParent = nameParent.FirstChild
-				}
-
-				name = nameParent.FirstChild.Data
+				name = strings.Join(nameComponents, " ")
 			}
 		}
 		if name == "" {
 			return errors.New("no name")
 		}
 
-		// rarity
-		// diamond1 diamond2 diamond3 diamond4 star1 star2 star3 crown
+		// Rarity
 		if imageNode == nil {
 			return fmt.Errorf("no img found %v) %v", number, name)
 		}
