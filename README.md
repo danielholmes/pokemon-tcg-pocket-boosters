@@ -9,12 +9,13 @@ A utility to work out which booster pack gives you the highest chance of receivi
  2. Setup lefthook `lefthook install`
 
 
+## Configuring
+
+Add a `/collection.json` file which contains a map of `%cardSetId% data.CardSetId` : `[]data.CardSetNumber`.
+
+
 ## Running
 
 ```
 go run main.go
 ```
-
-## TODO
-
- - Make missing card #s configurable - not hardcoded

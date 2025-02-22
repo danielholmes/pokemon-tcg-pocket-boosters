@@ -3,11 +3,15 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"slices"
 
 	"ptcgpocket/collection"
 	"ptcgpocket/data"
 	"ptcgpocket/source"
+
+	"encoding/json"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -123,31 +127,37 @@ var cardSetDataSources = [...]*source.CardSetSerebiiSource{
 	),
 }
 
-// TODO: In external config
-var userCollection collection.UserCollection = collection.NewUserCollection(
-	map[data.CardSetId]([]data.CardSetNumber){
-		"genetic-apex": {
-			3, 4, 7, 10, 13, 22, 36, 39, 50, 56, 61, 69, 73, 76, 80, 84, 89, 95, 98, 107, 117,
-			123, 124, 145, 146, 148, 149, 159, 166, 175, 177, 185, 191, 195, 197, 203, 204, 205, 221,
-			225, 226,
-			228, 229, 230, 231, 232, 233, 236, 237, 238, 240, 241, 242, 243, 244, 246, 248, 251, 252, 253, 254,
-			255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286,
-		},
-		"mythical-island": {
-			2, 3, 6, 7, 18, 25, 26, 32, 46, 59, 60, 62,
-			71, 73, 75, 76, 79, 80, 81, 82, 83, 84, 85, 86,
-		},
-		"space-time-smackdown": {
-			5, 7, 18, 22, 24, 29, 33, 36, 37, 41, 60, 65, 76, 79, 89, 90, 92, 94, 104, 113,
-			117, 120, 123, 129, 147, 153,
-			156, 157, 158, 160, 161, 162, 164, 166, 168, 169, 170, 171, 172, 173, 176, 177, 178, 179,
-			180, 181, 182, 183, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 200, 201, 202,
-			203, 205, 206, 207,
-		},
-	},
-)
+func readUserCollection() (*collection.UserCollection, error) {
+	dir, dErr := os.Getwd()
+	if dErr != nil {
+		return nil, dErr
+	}
+
+	collectionFilepath := filepath.Join(dir, "collection.json")
+
+	raw, err := os.ReadFile(collectionFilepath)
+	if err != nil {
+		return nil, err
+	}
+
+	var allMissing map[data.CardSetId]([]data.CardSetNumber)
+	uErr := json.Unmarshal(raw, &allMissing)
+	if uErr != nil {
+		return nil, uErr
+	}
+
+	userCollection := collection.NewUserCollection(allMissing)
+	return &userCollection, nil
+}
 
 func main() {
+	// Loading collection
+	userCollection, uErr := readUserCollection()
+	if uErr != nil {
+		panic(uErr)
+	}
+
+	// Gather data from sources
 	results := make(chan data.CardSet, len(cardSetDataSources))
 	g, ctx := errgroup.WithContext(context.Background())
 	for _, s := range cardSetDataSources {
