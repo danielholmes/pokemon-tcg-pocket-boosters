@@ -176,7 +176,7 @@ func main() {
 		sets = append(sets, &o)
 	}
 
-	// Show check of booster probabilities
+	// Audit of booster probabilities
 	fmt.Println("# Booster gathered data audit")
 	for _, s := range sets {
 		for b := range s.Boosters() {
@@ -208,7 +208,7 @@ func main() {
 		}
 	}
 
-	// Show collection
+	// Current collection stats
 	fmt.Println()
 	fmt.Println("# Current collection")
 	for _, s := range sets {
@@ -244,9 +244,8 @@ func main() {
 		)
 	}
 
-	// Show booster values
-	fmt.Println()
-	fmt.Println("# Booster values")
+	// Show booster probabilities
+	var allBoosters []boosterWithOrigin
 	for _, s := range sets {
 		missing, sExists := userCollection.MissingForSet(s.Id())
 		if !sExists {
@@ -254,19 +253,33 @@ func main() {
 			return
 		}
 
-		fmt.Printf(" ## %v\n", s.Name())
-
 		for b := range s.Boosters() {
-			fmt.Printf("  ### %v\n", b.Name())
-
 			totalOfferingMissing := 0.0
 			for o := range b.Offerings() {
 				if slices.Contains(missing, o.Card().Number()) {
 					totalOfferingMissing += o.RegularPackOffering()*0.9995 + o.RarePackOffering()*0.0005
 				}
 			}
-
-			fmt.Printf("   Total chance of receiving a missing %.2f%%\n", totalOfferingMissing)
+			allBoosters = append(allBoosters, boosterWithOrigin{
+				booster:              b,
+				totalOfferingMissing: totalOfferingMissing,
+				set:                  s,
+			})
 		}
 	}
+	slices.SortFunc(allBoosters, func(a boosterWithOrigin, b boosterWithOrigin) int {
+		return int(1000*b.totalOfferingMissing) - int(1000*a.totalOfferingMissing)
+	})
+
+	fmt.Println()
+	fmt.Println("# Booster probabilities")
+	for i, b := range allBoosters {
+		fmt.Printf("  %v) %.2f%% %v - %v\n", i+1, b.totalOfferingMissing, b.set.Name(), b.booster.Name())
+	}
+}
+
+type boosterWithOrigin struct {
+	set                  *data.CardSet
+	booster              *data.Booster
+	totalOfferingMissing float64
 }
