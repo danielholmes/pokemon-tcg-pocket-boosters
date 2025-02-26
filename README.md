@@ -1,9 +1,11 @@
 # Pokemon TCG Pocket Boosters
 
-A utility to work out which booster pack gives you the highest chance of receiving a card you don't already own.
+[![Build](https://github.com/danielholmes/pokemon-tcg-pocket-boosters/actions/workflows/test.yml/badge.svg)](https://github.com/danielholmes/pokemon-tcg-pocket-boosters/actions/workflows/test.yml)
+
+A utility to work out which booster pack gives you the highest chance of receiving a card you don't have.
 
 
-## Dependencies
+## Development setup
 
  1. Use asdf to install required versions of system dependencies, or otherwise see `.tool-versions` to install them manually in their required versions.
  2. Setup lefthook `lefthook install`
