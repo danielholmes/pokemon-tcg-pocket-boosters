@@ -1,4 +1,4 @@
-name: Test
+name: Build
 
 on:
   push:
@@ -38,5 +38,10 @@ jobs:
       - name: Install dependencies
         uses: bahmutov/npm-install@v1.10.5
 
-      - name: Test
-        run: npm run build
+      - name: Build
+        run: go build
+      
+      - name: Test run
+        run: |
+          cp ./collection.json.example ./collection.json
+          ./ptcgpocket
