@@ -125,6 +125,27 @@ var cardSetDataSources = [...]*source.CardSetSerebiiSource{
 			),
 		},
 	),
+	source.NewCardSetSerebiiSource(
+		"triumphant-light",
+		"Triumphant Light",
+		[]*source.BoosterSerebiiSource{
+			source.NewBoosterSerebiiSource(
+				"Arceus",
+				"https://www.serebii.net/tcgpocket/triumphantlight/arceus.shtml",
+				data.OfferingRatesTable{
+					&data.RarityOneDiamond:   *data.NewBoosterOffering(3.225, 0.000, 0.000, 0.000),
+					&data.RarityTwoDiamond:   *data.NewBoosterOffering(0.000, 3.461, 2.307, 0.000),
+					&data.RarityThreeDiamond: *data.NewBoosterOffering(0.000, 0.384, 1.538, 0.000),
+					&data.RarityFourDiamond:  *data.NewBoosterOffering(0.000, 0.333, 1.332, 0.000),
+					&data.RarityOneStar:      *data.NewBoosterOffering(0.000, 0.428, 1.714, 4.761),
+					&data.RarityTwoStar:      *data.NewBoosterOffering(0.000, 0.038, 0.153, 4.761),
+					&data.RarityThreeStar:    *data.NewBoosterOffering(0.000, 0.222, 0.888, 4.761),
+					&data.RarityCrown:        *data.NewBoosterOffering(0.000, 0.040, 0.160, 4.761),
+				},
+				96,
+			),
+		},
+	),
 }
 
 func readUserCollection() (*collection.UserCollection, error) {

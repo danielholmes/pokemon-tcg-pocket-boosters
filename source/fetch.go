@@ -151,7 +151,7 @@ func fetchBoosterDetails(booster *BoosterSerebiiSource, results chan<- data.Boos
 		}
 
 		if len(cells) != 7 {
-			return fmt.Errorf("expected 7 cells in booster row (got %v) %v", len(cells), r)
+			return fmt.Errorf("expected 7 cells in booster row (got %v) %v - row %v", len(cells), booster.name, i)
 		}
 
 		// Number
