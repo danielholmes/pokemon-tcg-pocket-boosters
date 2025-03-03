@@ -5,6 +5,7 @@ import (
 	"iter"
 	"slices"
 	"sort"
+	"strings"
 )
 
 type CardSetId = string
@@ -49,6 +50,14 @@ var (
 
 func (r *Rarity) IsSecret() bool {
 	return r.isSecret
+}
+
+func (r *Rarity) IsStar() bool {
+	return strings.Contains(r.value, "☆")
+}
+
+func (r *Rarity) IsCrown() bool {
+	return strings.Contains(r.value, "♕")
 }
 
 type OfferingRatesTable map[*Rarity]BoosterOffering

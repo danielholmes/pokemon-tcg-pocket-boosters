@@ -241,27 +241,31 @@ func main() {
 
 		fmt.Printf(" ## %v\n", s.Name())
 
-		totalSecretCardsCollected := 0
+		totalStarSecretCardsCollected := 0
+		totalCrownSecretCardsCollected := 0
 		totalNonSecretCardsCollected := 0
 		for c := range s.Cards() {
 			if !slices.Contains(missing, c.Number()) {
-				if c.Rarity().IsSecret() {
-					totalSecretCardsCollected += 1
+				if c.Rarity().IsStar() {
+					totalStarSecretCardsCollected += 1
+				} else if c.Rarity().IsCrown() {
+					totalCrownSecretCardsCollected += 1
 				} else {
 					totalNonSecretCardsCollected += 1
 				}
 			}
 		}
-		totalCollectedIncludingSecrets := totalSecretCardsCollected + totalNonSecretCardsCollected
+		totalCollectedIncludingSecrets := totalStarSecretCardsCollected + totalCrownSecretCardsCollected + totalNonSecretCardsCollected
 		fmt.Printf(
-			"    %v / %v (%v%%) %v★ Inc. secret %v / %v (%v%%)\n",
+			"    %v / %v (%v%%) %v★ %v♕ Inc. secret %v / %v (%v%%)\n",
 			totalNonSecretCardsCollected,
 			s.TotalNonSecretCards(),
 			100*totalNonSecretCardsCollected/int(s.TotalNonSecretCards()),
-			totalSecretCardsCollected,
+			totalStarSecretCardsCollected,
+			totalCrownSecretCardsCollected,
 			totalCollectedIncludingSecrets,
 			s.TotalCards(),
-			100*(totalSecretCardsCollected+totalNonSecretCardsCollected)/int(s.TotalCards()),
+			100*(totalCollectedIncludingSecrets)/int(s.TotalCards()),
 		)
 	}
 
