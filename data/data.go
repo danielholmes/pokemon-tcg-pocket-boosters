@@ -37,27 +37,27 @@ type Rarity struct {
 	value    string
 }
 
+const diamondChar = "♢"
+const starChar = "☆"
+const crownChar = "♕"
+
 var (
-	RarityOneDiamond   = Rarity{0, false, "♢"}
-	RarityTwoDiamond   = Rarity{1, false, "♢♢"}
-	RarityThreeDiamond = Rarity{2, false, "♢♢♢"}
-	RarityFourDiamond  = Rarity{3, false, "♢♢♢♢"}
-	RarityOneStar      = Rarity{4, true, "☆"}
-	RarityTwoStar      = Rarity{5, true, "☆☆"}
-	RarityThreeStar    = Rarity{6, true, "☆☆☆"}
-	RarityCrown        = Rarity{7, true, "♕"}
+	RarityOneDiamond   = Rarity{0, false, strings.Repeat(diamondChar, 1)}
+	RarityTwoDiamond   = Rarity{1, false, strings.Repeat(diamondChar, 2)}
+	RarityThreeDiamond = Rarity{2, false, strings.Repeat(diamondChar, 3)}
+	RarityFourDiamond  = Rarity{3, false, strings.Repeat(diamondChar, 4)}
+	RarityOneStar      = Rarity{4, true, strings.Repeat(starChar, 1)}
+	RarityTwoStar      = Rarity{5, true, strings.Repeat(starChar, 2)}
+	RarityThreeStar    = Rarity{6, true, strings.Repeat(starChar, 3)}
+	RarityCrown        = Rarity{7, true, strings.Repeat(crownChar, 1)}
 )
 
-func (r *Rarity) IsSecret() bool {
-	return r.isSecret
-}
-
 func (r *Rarity) IsStar() bool {
-	return strings.Contains(r.value, "☆")
+	return strings.Contains(r.value, starChar)
 }
 
 func (r *Rarity) IsCrown() bool {
-	return strings.Contains(r.value, "♕")
+	return strings.Contains(r.value, crownChar)
 }
 
 type OfferingRatesTable map[*Rarity]BoosterOffering
