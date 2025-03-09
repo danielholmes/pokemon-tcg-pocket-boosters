@@ -35,6 +35,13 @@ jobs:
         shell: bash
         run: asdf reshim
 
+      - name: Lint and test
+        run: |
+          go vet ./...
+          go fmt ./...
+          staticcheck ./...
+          go test ./...
+
       - name: Build
         run: go build
       
