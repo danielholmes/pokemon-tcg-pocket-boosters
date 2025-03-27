@@ -211,6 +211,8 @@ func fetchBoosterDetails(booster *BoosterSerebiiSource, results chan<- data.Boos
 			"star1":    &data.RarityOneStar,
 			"star2":    &data.RarityTwoStar,
 			"star3":    &data.RarityThreeStar,
+			"shiny1":   &data.RarityOneShiny,
+			"shiny2":   &data.RarityTwoShiny,
 			"crown":    &data.RarityCrown,
 		}
 		var rarity *data.Rarity = imageNameRarities[imageName]

@@ -31,6 +31,8 @@ func NewBoosterOffering(
 	}
 }
 
+var NotPresentBoosterOffering = NewBoosterOffering(0, 0, 0, 0)
+
 type Rarity struct {
 	order    uint8
 	isSecret bool
@@ -39,6 +41,7 @@ type Rarity struct {
 
 const diamondChar = "♢"
 const starChar = "☆"
+const shinyChar = "✵"
 const crownChar = "♕"
 
 var (
@@ -49,7 +52,9 @@ var (
 	RarityOneStar      = Rarity{4, true, strings.Repeat(starChar, 1)}
 	RarityTwoStar      = Rarity{5, true, strings.Repeat(starChar, 2)}
 	RarityThreeStar    = Rarity{6, true, strings.Repeat(starChar, 3)}
-	RarityCrown        = Rarity{7, true, strings.Repeat(crownChar, 1)}
+	RarityOneShiny     = Rarity{7, true, strings.Repeat(shinyChar, 1)}
+	RarityTwoShiny     = Rarity{8, true, strings.Repeat(shinyChar, 2)}
+	RarityCrown        = Rarity{9, true, strings.Repeat(crownChar, 1)}
 )
 
 func (r *Rarity) IsStar() bool {
@@ -58,6 +63,10 @@ func (r *Rarity) IsStar() bool {
 
 func (r *Rarity) IsCrown() bool {
 	return strings.Contains(r.value, crownChar)
+}
+
+func (r *Rarity) IsShiny() bool {
+	return strings.Contains(r.value, shinyChar)
 }
 
 type OfferingRatesTable map[*Rarity]BoosterOffering
