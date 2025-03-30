@@ -16,8 +16,8 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-var cardSetDataSources = [...]*source.CardSetSerebiiSource{
-	source.NewCardSetSerebiiSource(
+var expansionDataSources = [...]*source.ExpansionSerebiiSource{
+	source.NewExpansionSerebiiSource(
 		"genetic-apex",
 		"Genetic Apex",
 		[]*source.BoosterSerebiiSource{
@@ -74,7 +74,7 @@ var cardSetDataSources = [...]*source.CardSetSerebiiSource{
 			),
 		},
 	),
-	source.NewCardSetSerebiiSource(
+	source.NewExpansionSerebiiSource(
 		"mythical-island",
 		"Mythical Island",
 		[]*source.BoosterSerebiiSource{
@@ -97,7 +97,7 @@ var cardSetDataSources = [...]*source.CardSetSerebiiSource{
 			),
 		},
 	),
-	source.NewCardSetSerebiiSource(
+	source.NewExpansionSerebiiSource(
 		"space-time-smackdown",
 		"Space-time Smackdown",
 		[]*source.BoosterSerebiiSource{
@@ -137,7 +137,7 @@ var cardSetDataSources = [...]*source.CardSetSerebiiSource{
 			),
 		},
 	),
-	source.NewCardSetSerebiiSource(
+	source.NewExpansionSerebiiSource(
 		"triumphant-light",
 		"Triumphant Light",
 		[]*source.BoosterSerebiiSource{
@@ -160,7 +160,7 @@ var cardSetDataSources = [...]*source.CardSetSerebiiSource{
 			),
 		},
 	),
-	source.NewCardSetSerebiiSource(
+	source.NewExpansionSerebiiSource(
 		"shining-revelry",
 		"Shining Revelry",
 		[]*source.BoosterSerebiiSource{
@@ -198,7 +198,7 @@ func readUserCollection() (*collection.UserCollection, error) {
 		return nil, err
 	}
 
-	var allMissing map[data.CardSetId]([]data.CardSetNumber)
+	var allMissing map[data.ExpansionId]([]data.ExpansionNumber)
 	uErr := json.Unmarshal(raw, &allMissing)
 	if uErr != nil {
 		return nil, uErr
@@ -216,11 +216,11 @@ func main() {
 	}
 
 	// Gather data from sources
-	results := make(chan data.CardSet, len(cardSetDataSources))
+	results := make(chan data.Expansion, len(expansionDataSources))
 	g, ctx := errgroup.WithContext(context.Background())
-	for _, s := range cardSetDataSources {
+	for _, s := range expansionDataSources {
 		g.Go(func() error {
-			return source.FetchCardSetDetails(ctx, s, results)
+			return source.FetchExpansionDetails(ctx, s, results)
 		})
 	}
 	err := g.Wait()
@@ -229,7 +229,7 @@ func main() {
 		panic(err)
 	}
 
-	var sets []*data.CardSet
+	var sets []*data.Expansion
 	for o := range results {
 		sets = append(sets, &o)
 	}
@@ -345,7 +345,7 @@ func main() {
 }
 
 type boosterWithOrigin struct {
-	set                  *data.CardSet
+	set                  *data.Expansion
 	booster              *data.Booster
 	totalOfferingMissing float64
 }

@@ -8,8 +8,6 @@ import (
 	"strings"
 )
 
-type CardSetId = string
-
 type BoosterOffering struct {
 	first3CardOffering float64
 	fourthCardOffering float64
@@ -87,17 +85,17 @@ func (c *BaseCard) Name() string {
 	return c.name
 }
 
-type CardSetNumber uint16
+type ExpansionNumber uint16
 
 type Card struct {
 	core   *BaseCard
-	number CardSetNumber
+	number ExpansionNumber
 	rarity *Rarity
 }
 
 func NewCard(
 	core *BaseCard,
-	number CardSetNumber,
+	number ExpansionNumber,
 	rarity *Rarity,
 ) Card {
 	return Card{core: core, number: number, rarity: rarity}
@@ -115,7 +113,7 @@ func (c *Card) Rarity() *Rarity {
 	return c.rarity
 }
 
-func (c *Card) Number() CardSetNumber {
+func (c *Card) Number() ExpansionNumber {
 	return c.number
 }
 
@@ -156,19 +154,19 @@ func (b *BoosterCardOffering) RegularPackOffering() float64 {
 }
 
 type Booster struct {
-	name                        string
-	cards                       []*Card
-	offeringRates               OfferingRatesTable
-	crownExclusiveCardSetNumber CardSetNumber
+	name                          string
+	cards                         []*Card
+	offeringRates                 OfferingRatesTable
+	crownExclusiveExpansionNumber ExpansionNumber
 }
 
 func NewBooster(
 	name string,
 	cards []*Card,
 	offeringRates OfferingRatesTable,
-	crownExclusiveCardSetNumber CardSetNumber,
+	crownExclusiveExpansionNumber ExpansionNumber,
 ) Booster {
-	return Booster{name: name, cards: cards, offeringRates: offeringRates, crownExclusiveCardSetNumber: crownExclusiveCardSetNumber}
+	return Booster{name: name, cards: cards, offeringRates: offeringRates, crownExclusiveExpansionNumber: crownExclusiveExpansionNumber}
 }
 
 func (b *Booster) Name() string {
@@ -184,7 +182,7 @@ func (b *Booster) Offerings() iter.Seq[*BoosterCardOffering] {
 			panic(m)
 		}
 		rareCardOffering := 0.0
-		if c.Rarity() != &RarityCrown || c.number == b.crownExclusiveCardSetNumber {
+		if c.Rarity() != &RarityCrown || c.number == b.crownExclusiveExpansionNumber {
 			rareCardOffering = offeringRef.rareOffering
 		}
 		offerings[i] = &BoosterCardOffering{
@@ -198,8 +196,10 @@ func (b *Booster) Offerings() iter.Seq[*BoosterCardOffering] {
 	return slices.Values(offerings)
 }
 
-type CardSet struct {
-	id                  CardSetId
+type ExpansionId = string
+
+type Expansion struct {
+	id                  ExpansionId
 	name                string
 	boosters            []*Booster
 	cards               []*Card
@@ -207,37 +207,37 @@ type CardSet struct {
 	totalSecretCards    uint16
 }
 
-func (s *CardSet) Id() CardSetId {
+func (s *Expansion) Id() ExpansionId {
 	return s.id
 }
 
-func (s *CardSet) Name() string {
+func (s *Expansion) Name() string {
 	return s.name
 }
 
-func (c *CardSet) Cards() iter.Seq[*Card] {
+func (c *Expansion) Cards() iter.Seq[*Card] {
 	return slices.Values(c.cards)
 }
 
-func (c *CardSet) Boosters() iter.Seq[*Booster] {
+func (c *Expansion) Boosters() iter.Seq[*Booster] {
 	return slices.Values(c.boosters)
 }
 
-func (c *CardSet) TotalNonSecretCards() uint16 {
+func (c *Expansion) TotalNonSecretCards() uint16 {
 	return c.totalNonSecretCards
 }
 
-func (c *CardSet) TotalSecretCards() uint16 {
+func (c *Expansion) TotalSecretCards() uint16 {
 	return c.totalSecretCards
 }
 
-func (c *CardSet) TotalCards() uint16 {
+func (c *Expansion) TotalCards() uint16 {
 	return uint16(len(c.cards))
 }
 
-func NewCardSet(
-	id CardSetId,
-	name string, boosters []*Booster) CardSet {
+func NewExpansion(
+	id ExpansionId,
+	name string, boosters []*Booster) Expansion {
 	var cards []*Card
 	for _, b := range boosters {
 		for _, c := range b.cards {
@@ -257,7 +257,7 @@ func NewCardSet(
 		}
 	}
 
-	return CardSet{
+	return Expansion{
 		id:                  id,
 		name:                name,
 		boosters:            boosters,

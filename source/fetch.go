@@ -155,7 +155,7 @@ func fetchBoosterDetails(booster *BoosterSerebiiSource, results chan<- data.Boos
 		}
 
 		// Number
-		var number data.CardSetNumber
+		var number data.ExpansionNumber
 		numRe := regexp.MustCompile("([0-9]+?) / ([0-9]+)")
 		var imageNode *html.Node
 		for d := range cells[0].Descendants() {
@@ -166,7 +166,7 @@ func fetchBoosterDetails(booster *BoosterSerebiiSource, results chan<- data.Boos
 			dMatch := numRe.FindStringSubmatch(d.Data)
 			if dMatch != nil {
 				value, _ := strconv.ParseUint(dMatch[1], 10, 16)
-				number = data.CardSetNumber(value)
+				number = data.ExpansionNumber(value)
 			}
 		}
 
@@ -232,12 +232,12 @@ func fetchBoosterDetails(booster *BoosterSerebiiSource, results chan<- data.Boos
 		booster.Name(),
 		cards,
 		booster.OfferingRates(),
-		booster.CrownExclusiveCardSetNumber(),
+		booster.CrownExclusiveExpansionNumber(),
 	)
 	return nil
 }
 
-func FetchCardSetDetails(ctx context.Context, s *CardSetSerebiiSource, results chan<- data.CardSet) error {
+func FetchExpansionDetails(ctx context.Context, s *ExpansionSerebiiSource, results chan<- data.Expansion) error {
 	g, _ := errgroup.WithContext(ctx)
 
 	boosterResults := make(chan data.Booster, s.NumBoosterSources())
@@ -258,6 +258,6 @@ func FetchCardSetDetails(ctx context.Context, s *CardSetSerebiiSource, results c
 		boosters = append(boosters, &o)
 	}
 
-	results <- data.NewCardSet(s.Id(), s.Name(), boosters)
+	results <- data.NewExpansion(s.Id(), s.Name(), boosters)
 	return nil
 }

@@ -7,23 +7,23 @@ import (
 )
 
 type BoosterSerebiiSource struct {
-	name                        string
-	serebiiUrl                  string
-	offeringRates               data.OfferingRatesTable
-	crownExclusiveCardSetNumber data.CardSetNumber
+	name                          string
+	serebiiUrl                    string
+	offeringRates                 data.OfferingRatesTable
+	crownExclusiveExpansionNumber data.ExpansionNumber
 }
 
 func NewBoosterSerebiiSource(
 	name string,
 	serebiiUrl string,
 	offeringRates data.OfferingRatesTable,
-	crownExclusiveCardSetNumber data.CardSetNumber,
+	crownExclusiveExpansionNumber data.ExpansionNumber,
 ) *BoosterSerebiiSource {
 	return &BoosterSerebiiSource{
-		name:                        name,
-		serebiiUrl:                  serebiiUrl,
-		offeringRates:               offeringRates,
-		crownExclusiveCardSetNumber: crownExclusiveCardSetNumber,
+		name:                          name,
+		serebiiUrl:                    serebiiUrl,
+		offeringRates:                 offeringRates,
+		crownExclusiveExpansionNumber: crownExclusiveExpansionNumber,
 	}
 }
 
@@ -31,8 +31,8 @@ func (b *BoosterSerebiiSource) Name() string {
 	return b.name
 }
 
-func (b *BoosterSerebiiSource) CrownExclusiveCardSetNumber() data.CardSetNumber {
-	return b.crownExclusiveCardSetNumber
+func (b *BoosterSerebiiSource) CrownExclusiveExpansionNumber() data.ExpansionNumber {
+	return b.crownExclusiveExpansionNumber
 }
 
 func (b *BoosterSerebiiSource) SerebiiUrl() string {
@@ -43,36 +43,36 @@ func (b *BoosterSerebiiSource) OfferingRates() data.OfferingRatesTable {
 	return b.offeringRates
 }
 
-type CardSetSerebiiSource struct {
+type ExpansionSerebiiSource struct {
 	id             string
 	name           string
 	boosterSources []*BoosterSerebiiSource
 }
 
-func NewCardSetSerebiiSource(
+func NewExpansionSerebiiSource(
 	id string,
 	name string,
 	boosterSources []*BoosterSerebiiSource,
-) *CardSetSerebiiSource {
-	return &CardSetSerebiiSource{
+) *ExpansionSerebiiSource {
+	return &ExpansionSerebiiSource{
 		id:             id,
 		name:           name,
 		boosterSources: boosterSources,
 	}
 }
 
-func (s *CardSetSerebiiSource) Id() string {
+func (s *ExpansionSerebiiSource) Id() string {
 	return s.id
 }
 
-func (s *CardSetSerebiiSource) Name() string {
+func (s *ExpansionSerebiiSource) Name() string {
 	return s.name
 }
 
-func (s *CardSetSerebiiSource) BoosterSources() iter.Seq[*BoosterSerebiiSource] {
+func (s *ExpansionSerebiiSource) BoosterSources() iter.Seq[*BoosterSerebiiSource] {
 	return slices.Values(s.boosterSources)
 }
 
-func (s *CardSetSerebiiSource) NumBoosterSources() uint8 {
+func (s *ExpansionSerebiiSource) NumBoosterSources() uint8 {
 	return uint8(len(s.boosterSources))
 }
