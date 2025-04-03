@@ -21,3 +21,14 @@ Add a `/collection.json` file which contains a map of `%expansionId% data.Expans
 ```
 go run main.go
 ```
+
+## Running tests
+
+```
+go test ./...
+```
+
+## TODO
+
+ - Improve simulation performance. Booster instance creation is a good opportunity.
+ - Improve booster selection in sim - open booster giving biggest chance.

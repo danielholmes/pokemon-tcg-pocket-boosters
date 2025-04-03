@@ -6,9 +6,12 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
+	"strings"
 
 	"ptcgpocket/collection"
 	"ptcgpocket/data"
+	"ptcgpocket/sim"
 	"ptcgpocket/source"
 
 	"encoding/json"
@@ -208,36 +211,10 @@ func readUserCollection() (*collection.UserCollection, error) {
 	return &userCollection, nil
 }
 
-func main() {
-	// Loading collection
-	userCollection, uErr := readUserCollection()
-	if uErr != nil {
-		panic(uErr)
-	}
-
-	// Gather data from sources
-	results := make(chan data.Expansion, len(expansionDataSources))
-	g, ctx := errgroup.WithContext(context.Background())
-	for _, s := range expansionDataSources {
-		g.Go(func() error {
-			return source.FetchExpansionDetails(ctx, s, results)
-		})
-	}
-	err := g.Wait()
-	close(results)
-	if err != nil {
-		panic(err)
-	}
-
-	var sets []*data.Expansion
-	for o := range results {
-		sets = append(sets, &o)
-	}
-
-	// Audit of booster probabilities
+func printBoosterDataAudit(expansions []*data.Expansion) {
 	fmt.Println("# Booster gathered data audit")
-	for _, s := range sets {
-		for b := range s.Boosters() {
+	for _, e := range expansions {
+		for b := range e.Boosters() {
 			totalRegularPackOffering := 0.0
 			totalRarePackOffering := 0.0
 			totalFirstToThirdOffering := 0.0
@@ -254,7 +231,7 @@ func main() {
 			}
 			fmt.Printf(
 				" ## %v - %v\n   1-3: %.2f / 100%%\n   4: %.2f / 100%%\n   5: %.2f / 100%%\n   total regular: %.2f / 500%%\n   rare: %.2f / 100%%\n   total rare: %.2f / 500%%\n   \n",
-				s.Name(),
+				e.Name(),
 				b.Name(),
 				totalFirstToThirdOffering,
 				totalFourthOffering,
@@ -265,12 +242,12 @@ func main() {
 			)
 		}
 	}
+}
 
-	// Current collection stats
-	fmt.Println()
+func printCurrentCollectionStats(expansions []*data.Expansion, userCollection *collection.UserCollection) {
 	fmt.Println("# Current collection")
-	for _, s := range sets {
-		missing, sExists := userCollection.MissingForSet(s.Id())
+	for _, s := range expansions {
+		missing, sExists := userCollection.MissingForExpansion(s.Id())
 		if !sExists {
 			fmt.Printf("Set id %v not found\n", s.Id())
 			return
@@ -309,27 +286,28 @@ func main() {
 			100*(totalCollectedIncludingSecrets)/int(s.TotalCards()),
 		)
 	}
+}
 
-	// Show booster probabilities
+func printBoosterProbabilities(expansions []*data.Expansion, userCollection *collection.UserCollection) {
 	var allBoosters []boosterWithOrigin
-	for _, s := range sets {
-		missing, sExists := userCollection.MissingForSet(s.Id())
+	for _, e := range expansions {
+		missing, sExists := userCollection.MissingForExpansion(e.Id())
 		if !sExists {
-			fmt.Printf("Set id %v not found\n", s.Id())
+			fmt.Printf("Expansion id %v not found\n", e.Id())
 			return
 		}
 
-		for b := range s.Boosters() {
+		for b := range e.Boosters() {
 			totalOfferingMissing := 0.0
 			for o := range b.Offerings() {
 				if slices.Contains(missing, o.Card().Number()) {
-					totalOfferingMissing += o.RegularPackOffering()*0.9995 + o.RarePackOffering()*0.0005
+					totalOfferingMissing += o.OverallPackOffering()
 				}
 			}
 			allBoosters = append(allBoosters, boosterWithOrigin{
 				booster:              b,
 				totalOfferingMissing: totalOfferingMissing,
-				set:                  s,
+				set:                  e,
 			})
 		}
 	}
@@ -337,11 +315,130 @@ func main() {
 		return int(1000*b.totalOfferingMissing) - int(1000*a.totalOfferingMissing)
 	})
 
-	fmt.Println()
 	fmt.Println("# Booster probabilities")
 	for i, b := range allBoosters {
 		fmt.Printf("  %v) %.2f%% %v - %v\n", i+1, b.totalOfferingMissing, b.set.Name(), b.booster.Name())
 	}
+}
+
+func runSimulations(numRuns uint64, expansions []*data.Expansion, userCollection *collection.UserCollection) error {
+	fmt.Printf("# Pack opening simulations (%v runs)\n", numRuns)
+	fmt.Println("  The number of booster openings required to complete the collection.")
+
+	if numRuns == 0 {
+		return nil
+	}
+
+	g, _ := errgroup.WithContext(context.Background())
+
+	simResults := make(chan *sim.SimRun, numRuns)
+	for range numRuns {
+		g.Go(func() error {
+			r, rErr := sim.RunSim(expansions, userCollection)
+			if rErr != nil {
+				return rErr
+			}
+
+			simResults <- r
+			return nil
+		})
+	}
+	err := g.Wait()
+	if err != nil {
+		return err
+	}
+
+	close(simResults)
+
+	expansionTotals := make(map[*data.Expansion]uint64)
+	var total uint64
+	for r := range simResults {
+		for e, m := range r.NumberOfPacksOpened() {
+			expansionTotals[e] += m
+			total += m
+		}
+	}
+	expansionAverages := make(map[*data.Expansion]uint64)
+	var averagesTotal uint64
+	for e, t := range expansionTotals {
+		average := t / numRuns
+		expansionAverages[e] = average
+		averagesTotal += average
+	}
+	fmt.Printf("  Calculated via a Monte Carlo simulation of %v pack openings\n", total)
+	fmt.Println()
+	for e, a := range expansionAverages {
+		fmt.Printf("  ## %v = %v\n", e.Name(), a)
+	}
+	fmt.Printf("  Total pack openings %v\n", averagesTotal)
+
+	return nil
+}
+
+type runMode struct {
+	simulationRuns uint64
+}
+
+const simCommand = "sim"
+
+func readRunMode() (*runMode, error) {
+	args := os.Args[1:]
+	if len(args) == 0 {
+		return &runMode{simulationRuns: 0}, nil
+	}
+
+	if len(args) != 2 || args[0] != simCommand {
+		return nil, fmt.Errorf("expected no args or '%v #' where # is an int. Got args '%v'", simCommand, strings.Join(args, " "))
+	}
+
+	simulationRuns, sErr := strconv.ParseUint(args[1], 10, 64)
+	if sErr != nil {
+		return nil, sErr
+	}
+
+	return &runMode{simulationRuns: simulationRuns}, nil
+}
+
+func main() {
+	runMode, rErr := readRunMode()
+	if rErr != nil {
+		panic(rErr)
+	}
+
+	// Loading collection
+	userCollection, uErr := readUserCollection()
+	if uErr != nil {
+		panic(uErr)
+	}
+
+	// Gather data from sources
+	results := make(chan data.Expansion, len(expansionDataSources))
+	g, ctx := errgroup.WithContext(context.Background())
+	for _, s := range expansionDataSources {
+		g.Go(func() error {
+			return source.FetchExpansionDetails(ctx, s, results)
+		})
+	}
+	err := g.Wait()
+	close(results)
+	if err != nil {
+		panic(err)
+	}
+
+	var expansions []*data.Expansion
+	for e := range results {
+		expansions = append(expansions, &e)
+	}
+
+	printBoosterDataAudit(expansions)
+	fmt.Println()
+	printCurrentCollectionStats(expansions, userCollection)
+	fmt.Println()
+	printBoosterProbabilities(expansions, userCollection)
+	fmt.Println()
+	printBoosterProbabilities(expansions, userCollection)
+	fmt.Println()
+	runSimulations(runMode.simulationRuns, expansions, userCollection)
 }
 
 type boosterWithOrigin struct {

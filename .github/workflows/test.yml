@@ -48,4 +48,4 @@ jobs:
       - name: Test run
         run: |
           cp ./collection.json.example ./collection.json
-          ./ptcgpocket
+          ./ptcgpocket sim 20
