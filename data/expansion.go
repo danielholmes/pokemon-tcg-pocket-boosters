@@ -78,20 +78,30 @@ func (e *Expansion) TotalCards() uint16 {
 	return uint16(len(e.cards))
 }
 
-func (e *Expansion) GetBoosterOfferingCardNumber(
+func (e *Expansion) GetHighestOfferingBoosterForMissingCards(
 	missingCardNumbers []ExpansionNumber,
 ) (*Booster, error) {
 	if len(missingCardNumbers) == 0 {
 		return nil, fmt.Errorf("no missing card numbers provided")
 	}
 
-	for _, b := range e.boosters {
-		boosterOffersCard := slices.ContainsFunc(b.cards, func(c *Card) bool {
-			return slices.Contains(missingCardNumbers, c.number)
-		})
-		if boosterOffersCard {
-			return b, nil
+	if len(e.boosters) == 1 {
+		return e.boosters[0], nil
+	}
+
+	var bestBooster *Booster
+	var bestBoosterProbability = -1.0
+	for b := range e.Boosters() {
+		boosterProbability := b.GetInstanceProbabilityForMissing(missingCardNumbers)
+		if boosterProbability > bestBoosterProbability {
+			bestBoosterProbability = boosterProbability
+			bestBooster = b
 		}
 	}
-	return nil, fmt.Errorf("no booster offering any card number")
+
+	if bestBoosterProbability == 0.0 {
+		return nil, fmt.Errorf("no booster offering any card number")
+	}
+
+	return bestBooster, nil
 }

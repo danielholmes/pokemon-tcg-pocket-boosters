@@ -17,7 +17,11 @@ import (
 	"encoding/json"
 
 	"golang.org/x/sync/errgroup"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
+
+var printer = message.NewPrinter(language.English)
 
 var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 	source.NewExpansionSerebiiSource(
@@ -293,21 +297,15 @@ func printBoosterProbabilities(expansions []*data.Expansion, userCollection *col
 	for _, e := range expansions {
 		missing, sExists := userCollection.MissingForExpansion(e.Id())
 		if !sExists {
-			fmt.Printf("Expansion id %v not found\n", e.Id())
-			return
+			continue
 		}
 
 		for b := range e.Boosters() {
-			totalOfferingMissing := 0.0
-			for o := range b.Offerings() {
-				if slices.Contains(missing, o.Card().Number()) {
-					totalOfferingMissing += o.OverallPackOffering()
-				}
-			}
+			totalOfferingMissing := b.GetInstanceProbabilityForMissing(missing)
 			allBoosters = append(allBoosters, boosterWithOrigin{
 				booster:              b,
 				totalOfferingMissing: totalOfferingMissing,
-				set:                  e,
+				expansion:            e,
 			})
 		}
 	}
@@ -317,12 +315,12 @@ func printBoosterProbabilities(expansions []*data.Expansion, userCollection *col
 
 	fmt.Println("# Booster probabilities")
 	for i, b := range allBoosters {
-		fmt.Printf("  %v) %.2f%% %v - %v\n", i+1, b.totalOfferingMissing, b.set.Name(), b.booster.Name())
+		fmt.Printf("  %v) %.2f%% %v - %v\n", i+1, b.totalOfferingMissing, b.expansion.Name(), b.booster.Name())
 	}
 }
 
 func runSimulations(numRuns uint64, expansions []*data.Expansion, userCollection *collection.UserCollection) error {
-	fmt.Printf("# Pack opening simulations (%v runs)\n", numRuns)
+	printer.Printf("# Pack opening simulations (%d runs)\n", numRuns)
 	fmt.Println("  The number of booster openings required to complete the collection.")
 
 	if numRuns == 0 {
@@ -365,12 +363,12 @@ func runSimulations(numRuns uint64, expansions []*data.Expansion, userCollection
 		expansionAverages[e] = average
 		averagesTotal += average
 	}
-	fmt.Printf("  Calculated via a Monte Carlo simulation of %v pack openings\n", total)
+	printer.Printf("  Calculated via a Monte Carlo simulation of %d pack openings\n", total)
 	fmt.Println()
 	for e, a := range expansionAverages {
-		fmt.Printf("  ## %v = %v\n", e.Name(), a)
+		printer.Printf("  ## %v = %d\n", e.Name(), a)
 	}
-	fmt.Printf("  Total pack openings %v\n", averagesTotal)
+	printer.Printf("  Total pack openings %d\n", averagesTotal)
 
 	return nil
 }
@@ -436,13 +434,11 @@ func main() {
 	fmt.Println()
 	printBoosterProbabilities(expansions, userCollection)
 	fmt.Println()
-	printBoosterProbabilities(expansions, userCollection)
-	fmt.Println()
 	runSimulations(runMode.simulationRuns, expansions, userCollection)
 }
 
 type boosterWithOrigin struct {
-	set                  *data.Expansion
+	expansion            *data.Expansion
 	booster              *data.Booster
 	totalOfferingMissing float64
 }

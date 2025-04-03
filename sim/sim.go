@@ -43,7 +43,7 @@ func RunSim(
 				continue
 			}
 
-			simBooster, sErr := e.GetBoosterOfferingCardNumber(
+			simBooster, sErr := e.GetHighestOfferingBoosterForMissingCards(
 				missing,
 			)
 			if sErr != nil {

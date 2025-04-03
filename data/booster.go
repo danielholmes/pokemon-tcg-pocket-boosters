@@ -96,6 +96,7 @@ type Booster struct {
 	cards                         []*Card
 	offeringRates                 OfferingRatesTable
 	crownExclusiveExpansionNumber ExpansionNumber
+	offerings                     iter.Seq[*BoosterCardOffering]
 }
 
 func NewBooster(
@@ -104,29 +105,16 @@ func NewBooster(
 	offeringRates OfferingRatesTable,
 	crownExclusiveExpansionNumber ExpansionNumber,
 ) Booster {
-	return Booster{
-		name:                          name,
-		cards:                         cards,
-		offeringRates:                 offeringRates,
-		crownExclusiveExpansionNumber: crownExclusiveExpansionNumber,
-	}
-}
-
-func (b *Booster) Name() string {
-	return b.name
-}
-
-func (b *Booster) Offerings() iter.Seq[*BoosterCardOffering] {
-	offerings := make([]*BoosterCardOffering, len(b.cards))
-	for i, c := range b.cards {
-		offeringRef, offeringRefExists := b.offeringRates[c.Rarity()]
+	offerings := make([]*BoosterCardOffering, len(cards))
+	for i, c := range cards {
+		offeringRef, offeringRefExists := offeringRates[c.Rarity()]
 		if !offeringRefExists {
-			m, _ := fmt.Printf("Offering rate not found for %v %v", b.name, c.Rarity().value)
+			m, _ := fmt.Printf("Offering rate not found for %v %v", name, c.Rarity().value)
 			panic(m)
 		}
 
 		rareCardOffering := 0.0
-		if c.Rarity() != &RarityCrown || c.number == b.crownExclusiveExpansionNumber {
+		if c.Rarity() != &RarityCrown || c.number == crownExclusiveExpansionNumber {
 			rareCardOffering = offeringRef.rareOffering
 		}
 
@@ -138,7 +126,32 @@ func (b *Booster) Offerings() iter.Seq[*BoosterCardOffering] {
 			rareCardOffering:   rareCardOffering,
 		}
 	}
-	return slices.Values(offerings)
+
+	return Booster{
+		name:                          name,
+		cards:                         cards,
+		offeringRates:                 offeringRates,
+		crownExclusiveExpansionNumber: crownExclusiveExpansionNumber,
+		offerings:                     slices.Values(offerings),
+	}
+}
+
+func (b *Booster) Name() string {
+	return b.name
+}
+
+func (b *Booster) Offerings() iter.Seq[*BoosterCardOffering] {
+	return b.offerings
+}
+
+func (b *Booster) GetInstanceProbabilityForMissing(missing []ExpansionNumber) float64 {
+	totalOfferingMissing := 0.0
+	for o := range b.Offerings() {
+		if slices.Contains(missing, o.Card().Number()) {
+			totalOfferingMissing += o.OverallPackOffering()
+		}
+	}
+	return totalOfferingMissing
 }
 
 func (b *Booster) CreateRandomInstance() *BoosterInstance {
