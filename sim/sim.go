@@ -73,6 +73,9 @@ func RunSim(
 				boosterInstance.CardNumbers(),
 			)
 
+			if expansionRuns[e] == nil {
+				expansionRuns[e] = &ExpansionSimRun{}
+			}
 			expansionRuns[e].numOpened++
 			if boosterInstance.IsRare() {
 				expansionRuns[e].numRarePacks++
