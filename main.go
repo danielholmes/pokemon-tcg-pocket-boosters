@@ -319,8 +319,14 @@ func printBoosterProbabilities(expansions []*data.Expansion, userCollection *col
 	}
 }
 
-func runSimulations(numRuns uint64, expansions []*data.Expansion, userCollection *collection.UserCollection) error {
-	printer.Printf("# Pack opening simulations (%d runs)\n", numRuns)
+func runSimulations(
+	title string,
+	numRuns uint64,
+	expansions []*data.Expansion,
+	userCollection *collection.UserCollection,
+	completePredicate sim.ExpansionSimCompletePredicate,
+) error {
+	printer.Printf("# %v - pack opening simulations (%d runs)\n", title, numRuns)
 	fmt.Println("  The number of booster openings required to complete the collection.")
 
 	if numRuns == 0 {
@@ -332,7 +338,11 @@ func runSimulations(numRuns uint64, expansions []*data.Expansion, userCollection
 	simResults := make(chan *sim.SimRun, numRuns)
 	for range numRuns {
 		g.Go(func() error {
-			r, rErr := sim.RunSim(expansions, userCollection)
+			r, rErr := sim.RunSim(
+				expansions,
+				userCollection,
+				completePredicate,
+			)
 			if rErr != nil {
 				return rErr
 			}
@@ -434,7 +444,34 @@ func main() {
 	fmt.Println()
 	printBoosterProbabilities(expansions, userCollection)
 	fmt.Println()
-	runSimulations(runMode.simulationRuns, expansions, userCollection)
+	runSimulations(
+		"Whole collection",
+		runMode.simulationRuns,
+		expansions,
+		userCollection,
+		func(e *data.Expansion, m []data.ExpansionNumber) bool {
+			return len(m) == 0
+		},
+	)
+	fmt.Println()
+	runSimulations(
+		"Non-secret cards collection",
+		runMode.simulationRuns,
+		expansions,
+		userCollection,
+		func(e *data.Expansion, m []data.ExpansionNumber) bool {
+			for _, id := range m {
+				card, cErr := e.GetCardByNumber(id)
+				if cErr != nil {
+					panic(cErr)
+				}
+				if !card.Rarity().IsSecret() {
+					return false
+				}
+			}
+			return true
+		},
+	)
 }
 
 type boosterWithOrigin struct {

@@ -78,6 +78,16 @@ func (e *Expansion) TotalCards() uint16 {
 	return uint16(len(e.cards))
 }
 
+func (e *Expansion) GetCardByNumber(number ExpansionNumber) (*Card, error) {
+	cIndex := slices.IndexFunc(e.cards, func(c *Card) bool {
+		return c.number == number
+	})
+	if cIndex == -1 {
+		return nil, fmt.Errorf("no card with number %v", number)
+	}
+	return e.cards[cIndex], nil
+}
+
 func (e *Expansion) GetHighestOfferingBoosterForMissingCards(
 	missingCardNumbers []ExpansionNumber,
 ) (*Booster, error) {

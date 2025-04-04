@@ -40,6 +40,10 @@ func (r *Rarity) IsShiny() bool {
 	return strings.Contains(r.value, shinyChar)
 }
 
+func (r *Rarity) IsSecret() bool {
+	return r.isSecret
+}
+
 type BaseCard struct {
 	name   string
 	health uint8

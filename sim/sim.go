@@ -24,22 +24,25 @@ func (r *SimRun) NumberOfPacksOpened() iter.Seq2[*data.Expansion, uint64] {
 	return maps.All(r.numberOfPacksOpened)
 }
 
+type ExpansionSimCompletePredicate func(*data.Expansion, []data.ExpansionNumber) bool
+
 func RunSim(
 	expansions []*data.Expansion,
 	userCollection *collection.UserCollection,
+	expansionCompletePredicate ExpansionSimCompletePredicate,
 ) (*SimRun, error) {
 	simCollection := userCollection.Clone()
 	numberOfPacksOpened := make(map[*data.Expansion]uint64)
 	for _, e := range expansions {
-		moreMissing := true
-		for moreMissing {
+		isExpansionComplete := false
+		for !isExpansionComplete {
 			missing, missingFound := simCollection.MissingForExpansion(e.Id())
 			if !missingFound {
 				panic("No missing found")
 			}
 
-			if len(missing) == 0 {
-				moreMissing = false
+			if expansionCompletePredicate(e, missing) {
+				isExpansionComplete = true
 				continue
 			}
 
