@@ -91,12 +91,49 @@ func (b *BoosterInstance) CardNumbers() [5]ExpansionNumber {
 
 type OfferingRatesTable map[*Rarity]BoosterOffering
 
+type cardProbabilityEntry struct {
+	cumulativeProbability float64
+	card                  *Card
+}
+
+type offeringProbabilityList struct {
+	// Should always be 100, but atm we have some odd data where it's less.
+	// Should solve that core issue one day.
+	totalProbability float64
+	entries          []*cardProbabilityEntry
+}
+
+func (o *offeringProbabilityList) append(card *Card, probability float64) {
+	if probability == 0 {
+		return
+	}
+
+	o.totalProbability += probability
+	o.entries = append(o.entries, &cardProbabilityEntry{
+		cumulativeProbability: o.totalProbability,
+		card:                  card,
+	})
+}
+
+func (o *offeringProbabilityList) pickRandomCard() *Card {
+	num := rand.Float64() * o.totalProbability
+	for _, e := range o.entries {
+		if num <= e.cumulativeProbability {
+			return e.card
+		}
+	}
+	panic(fmt.Sprintf("Invalid algorithm %v num %v total", num, o.totalProbability))
+}
+
 type Booster struct {
 	name                          string
 	cards                         []*Card
-	offeringRates                 OfferingRatesTable
 	crownExclusiveExpansionNumber ExpansionNumber
 	offerings                     iter.Seq[*BoosterCardOffering]
+	regularPack1To3List           *offeringProbabilityList
+	regularPack4List              *offeringProbabilityList
+	regularPack5List              *offeringProbabilityList
+	rarePackList                  *offeringProbabilityList
 }
 
 func NewBooster(
@@ -106,6 +143,10 @@ func NewBooster(
 	crownExclusiveExpansionNumber ExpansionNumber,
 ) Booster {
 	offerings := make([]*BoosterCardOffering, len(cards))
+	regularPack1To3List := offeringProbabilityList{}
+	regularPack4List := offeringProbabilityList{}
+	regularPack5List := offeringProbabilityList{}
+	rarePackList := offeringProbabilityList{}
 	for i, c := range cards {
 		offeringRef, offeringRefExists := offeringRates[c.Rarity()]
 		if !offeringRefExists {
@@ -125,14 +166,22 @@ func NewBooster(
 			fifthCardOffering:  offeringRef.fifthCardOffering,
 			rareCardOffering:   rareCardOffering,
 		}
+
+		regularPack1To3List.append(c, offeringRef.first3CardOffering)
+		regularPack4List.append(c, offeringRef.fourthCardOffering)
+		regularPack5List.append(c, offeringRef.fifthCardOffering)
+		rarePackList.append(c, offeringRef.rareOffering)
 	}
 
 	return Booster{
 		name:                          name,
 		cards:                         cards,
-		offeringRates:                 offeringRates,
 		crownExclusiveExpansionNumber: crownExclusiveExpansionNumber,
 		offerings:                     slices.Values(offerings),
+		regularPack1To3List:           &regularPack1To3List,
+		regularPack4List:              &regularPack4List,
+		regularPack5List:              &regularPack5List,
+		rarePackList:                  &rarePackList,
 	}
 }
 
@@ -155,67 +204,23 @@ func (b *Booster) GetInstanceProbabilityForMissing(missing []ExpansionNumber) fl
 }
 
 func (b *Booster) CreateRandomInstance() *BoosterInstance {
-	var cards [5]*Card
-
 	// Rare pack
 	if rand.Float64() < RarePackRate {
-		// TODO:
+		return NewBoosterInstance([5]*Card{
+			b.rarePackList.pickRandomCard(),
+			b.rarePackList.pickRandomCard(),
+			b.rarePackList.pickRandomCard(),
+			b.rarePackList.pickRandomCard(),
+			b.rarePackList.pickRandomCard(),
+		})
 	}
 
 	// Regular pack
-	card1Rand := rand.Float64() * 100.0
-	card2Rand := rand.Float64() * 100.0
-	card3Rand := rand.Float64() * 100.0
-	card4Rand := rand.Float64() * 100.0
-	card5Rand := rand.Float64() * 100.0
-	for o := range b.Offerings() {
-		if cards[0] == nil {
-			if card1Rand <= o.first3CardOffering {
-				cards[0] = o.card
-			} else {
-				card1Rand -= o.first3CardOffering
-			}
-		}
-		if cards[1] == nil {
-			if card2Rand <= o.first3CardOffering {
-				cards[1] = o.card
-			} else {
-				card2Rand -= o.first3CardOffering
-			}
-		}
-		if cards[2] == nil {
-			if card3Rand <= o.first3CardOffering {
-				cards[2] = o.card
-			} else {
-				card3Rand -= o.first3CardOffering
-			}
-		}
-		if cards[3] == nil {
-			if card4Rand <= o.fourthCardOffering {
-				cards[3] = o.card
-			} else {
-				card4Rand -= o.fourthCardOffering
-			}
-		}
-		if cards[4] == nil {
-			if card5Rand <= o.fifthCardOffering {
-				cards[4] = o.card
-			} else {
-				card5Rand -= o.fifthCardOffering
-			}
-		}
-	}
-
-	// We have some percentages that don't match up to 100 exactly. Leaving some gaps.
-	// Ideally we fix by making a;; add up to 100, but for now just shove in the first offering.
-	for i, c := range cards {
-		if c == nil {
-			for o := range b.Offerings() {
-				cards[i] = o.card
-				break
-			}
-		}
-	}
-
-	return NewBoosterInstance(cards)
+	return NewBoosterInstance([5]*Card{
+		b.regularPack1To3List.pickRandomCard(),
+		b.regularPack1To3List.pickRandomCard(),
+		b.regularPack1To3List.pickRandomCard(),
+		b.regularPack4List.pickRandomCard(),
+		b.regularPack5List.pickRandomCard(),
+	})
 }

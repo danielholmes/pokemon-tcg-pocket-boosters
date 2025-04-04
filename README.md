@@ -42,7 +42,6 @@ go test ./...
 
 ## TODO
 
- - Improve simulation performance. Booster instance creation is a good opportunity.
  - Include wonder picks. e.g. 
     - pick a rate such as average 3 boosters opened per day.
     - each 3 boosters = 1.25 wonder stamina (includes some for quests)
