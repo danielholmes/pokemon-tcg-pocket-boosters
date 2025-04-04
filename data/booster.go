@@ -74,11 +74,16 @@ func (b *BoosterCardOffering) OverallPackOffering() float64 {
 }
 
 type BoosterInstance struct {
-	cards [5]*Card
+	isRare bool
+	cards  [5]*Card
 }
 
-func NewBoosterInstance(cards [5]*Card) *BoosterInstance {
-	return &BoosterInstance{cards: cards}
+func NewBoosterInstance(isRare bool, cards [5]*Card) *BoosterInstance {
+	return &BoosterInstance{isRare: isRare, cards: cards}
+}
+
+func (b *BoosterInstance) IsRare() bool {
+	return b.isRare
 }
 
 func (b *BoosterInstance) CardNumbers() [5]ExpansionNumber {
@@ -206,21 +211,25 @@ func (b *Booster) GetInstanceProbabilityForMissing(missing []ExpansionNumber) fl
 func (b *Booster) CreateRandomInstance() *BoosterInstance {
 	// Rare pack
 	if rand.Float64() < RarePackRate {
-		return NewBoosterInstance([5]*Card{
-			b.rarePackList.pickRandomCard(),
-			b.rarePackList.pickRandomCard(),
-			b.rarePackList.pickRandomCard(),
-			b.rarePackList.pickRandomCard(),
-			b.rarePackList.pickRandomCard(),
-		})
+		return NewBoosterInstance(
+			true,
+			[5]*Card{
+				b.rarePackList.pickRandomCard(),
+				b.rarePackList.pickRandomCard(),
+				b.rarePackList.pickRandomCard(),
+				b.rarePackList.pickRandomCard(),
+				b.rarePackList.pickRandomCard(),
+			})
 	}
 
 	// Regular pack
-	return NewBoosterInstance([5]*Card{
-		b.regularPack1To3List.pickRandomCard(),
-		b.regularPack1To3List.pickRandomCard(),
-		b.regularPack1To3List.pickRandomCard(),
-		b.regularPack4List.pickRandomCard(),
-		b.regularPack5List.pickRandomCard(),
-	})
+	return NewBoosterInstance(
+		false,
+		[5]*Card{
+			b.regularPack1To3List.pickRandomCard(),
+			b.regularPack1To3List.pickRandomCard(),
+			b.regularPack1To3List.pickRandomCard(),
+			b.regularPack4List.pickRandomCard(),
+			b.regularPack5List.pickRandomCard(),
+		})
 }

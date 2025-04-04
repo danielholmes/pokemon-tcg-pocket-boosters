@@ -8,20 +8,33 @@ import (
 	"ptcgpocket/data"
 )
 
+type ExpansionSimRun struct {
+	numOpened    uint64
+	numRarePacks uint64
+}
+
+func (r *ExpansionSimRun) NumOpened() uint64 {
+	return r.numOpened
+}
+
+func (r *ExpansionSimRun) NumRarePacks() uint64 {
+	return r.numRarePacks
+}
+
 type SimRun struct {
-	numberOfPacksOpened map[*data.Expansion]uint64
+	expansionRuns map[*data.Expansion]*ExpansionSimRun
 }
 
 func (r *SimRun) TotalPacksOpened() uint64 {
 	var total uint64
-	for _, n := range r.numberOfPacksOpened {
-		total += n
+	for _, n := range r.expansionRuns {
+		total += n.numOpened
 	}
 	return total
 }
 
-func (r *SimRun) NumberOfPacksOpened() iter.Seq2[*data.Expansion, uint64] {
-	return maps.All(r.numberOfPacksOpened)
+func (r *SimRun) ExpansionRuns() iter.Seq2[*data.Expansion, *ExpansionSimRun] {
+	return maps.All(r.expansionRuns)
 }
 
 type ExpansionSimCompletePredicate func(*data.Expansion, []data.ExpansionNumber) bool
@@ -32,7 +45,7 @@ func RunSim(
 	expansionCompletePredicate ExpansionSimCompletePredicate,
 ) (*SimRun, error) {
 	simCollection := userCollection.Clone()
-	numberOfPacksOpened := make(map[*data.Expansion]uint64)
+	expansionRuns := make(map[*data.Expansion]*ExpansionSimRun)
 	for _, e := range expansions {
 		isExpansionComplete := false
 		for !isExpansionComplete {
@@ -60,9 +73,12 @@ func RunSim(
 				boosterInstance.CardNumbers(),
 			)
 
-			numberOfPacksOpened[e]++
+			expansionRuns[e].numOpened++
+			if boosterInstance.IsRare() {
+				expansionRuns[e].numRarePacks++
+			}
 		}
 	}
 
-	return &SimRun{numberOfPacksOpened: numberOfPacksOpened}, nil
+	return &SimRun{expansionRuns: expansionRuns}, nil
 }

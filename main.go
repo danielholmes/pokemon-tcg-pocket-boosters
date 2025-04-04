@@ -360,10 +360,12 @@ func runSimulations(
 
 	expansionTotals := make(map[*data.Expansion]uint64)
 	var total uint64
+	var totalRarePacks uint64
 	for r := range simResults {
-		for e, m := range r.NumberOfPacksOpened() {
-			expansionTotals[e] += m
-			total += m
+		for e, run := range r.ExpansionRuns() {
+			expansionTotals[e] += run.NumOpened()
+			total += run.NumOpened()
+			totalRarePacks += run.NumRarePacks()
 		}
 	}
 	expansionAverages := make(map[*data.Expansion]uint64)
@@ -373,7 +375,7 @@ func runSimulations(
 		expansionAverages[e] = average
 		averagesTotal += average
 	}
-	printer.Printf("  Calculated via a Monte Carlo simulation of %d pack openings\n", total)
+	printer.Printf("  Calculated via a Monte Carlo simulation of %d pack openings (and %d rare packs)\n", total, totalRarePacks)
 	fmt.Println()
 	for e, a := range expansionAverages {
 		printer.Printf("  ## %v = %d\n", e.Name(), a)
