@@ -211,8 +211,7 @@ func readUserCollection() (*collection.UserCollection, error) {
 		return nil, uErr
 	}
 
-	userCollection := collection.NewUserCollection(allMissing)
-	return &userCollection, nil
+	return collection.NewUserCollection(allMissing), nil
 }
 
 func printBoosterDataAudit(expansions []*data.Expansion) {
@@ -319,6 +318,13 @@ func printBoosterProbabilities(expansions []*data.Expansion, userCollection *col
 	}
 }
 
+type expansionSimRunAmounts struct {
+	numOpened                      uint64
+	totalPackPoints                uint64
+	numCardsObtainedFromPackPoints uint64
+	numRarePacks                   uint64
+}
+
 func runSimulations(
 	title string,
 	numRuns uint64,
@@ -358,32 +364,47 @@ func runSimulations(
 
 	close(simResults)
 
-	expansionTotals := make(map[*data.Expansion]uint64)
-	expansionRarePacks := make(map[*data.Expansion]uint64)
+	expansionTotals := make(map[*data.Expansion]*expansionSimRunAmounts)
 	var total uint64
 	for r := range simResults {
 		for e, run := range r.ExpansionRuns() {
-			expansionTotals[e] += run.NumOpened()
-			expansionRarePacks[e] += run.NumRarePacks()
+			eTotals := expansionTotals[e]
+			if eTotals == nil {
+				eTotals = &expansionSimRunAmounts{}
+				expansionTotals[e] = eTotals
+			}
+
+			eTotals.numOpened += run.NumOpened()
+			eTotals.totalPackPoints += run.TotalPackPoints()
+			eTotals.numCardsObtainedFromPackPoints += run.NumCardsObtainedFromPackPoints()
+			eTotals.numRarePacks += run.NumRarePacks()
 			total += run.NumOpened()
 		}
 	}
-	expansionAverages := make(map[*data.Expansion]uint64)
+	expansionAverages := make(map[*data.Expansion]*expansionSimRunAmounts)
 	var averagesTotal uint64
 	for e, t := range expansionTotals {
-		average := t / numRuns
-		expansionAverages[e] = average
-		averagesTotal += average
-
-		averageRarePacks := expansionRarePacks[e] / numRuns
-		expansionRarePacks[e] = averageRarePacks
+		expansionAverages[e] = &expansionSimRunAmounts{
+			numOpened:                      t.numOpened / numRuns,
+			totalPackPoints:                t.totalPackPoints / numRuns,
+			numCardsObtainedFromPackPoints: t.numCardsObtainedFromPackPoints / numRuns,
+			numRarePacks:                   t.numRarePacks / numRuns,
+		}
+		averagesTotal += t.numOpened / numRuns
 	}
 	printer.Printf("  Calculated via a Monte Carlo simulation of %d pack openings\n", total)
 	fmt.Println()
 	for e, a := range expansionAverages {
-		printer.Printf("  ## %v = %d (%d rare packs)\n", e.Name(), a, expansionRarePacks[e])
+		printer.Printf(
+			"  ## %v\n",
+			e.Name(),
+		)
+		printer.Printf("     Packs opened        %v\n", a.numOpened)
+		printer.Printf("     Rare packs          %v\n", a.numRarePacks)
+		printer.Printf("     Cards from pack pts %v\n", a.numCardsObtainedFromPackPoints)
 	}
-	printer.Printf("  Total pack openings %d\n", averagesTotal)
+	printer.Println()
+	printer.Printf("  ## Total pack openings %d\n", averagesTotal)
 
 	return nil
 }
@@ -392,19 +413,17 @@ type runMode struct {
 	simulationRuns uint64
 }
 
-const simCommand = "sim"
-
 func readRunMode() (*runMode, error) {
 	args := os.Args[1:]
 	if len(args) == 0 {
-		return &runMode{simulationRuns: 0}, nil
+		return &runMode{simulationRuns: 10}, nil
 	}
 
-	if len(args) != 2 || args[0] != simCommand {
-		return nil, fmt.Errorf("expected no args or '%v #' where # is an int. Got args '%v'", simCommand, strings.Join(args, " "))
+	if len(args) != 1 {
+		return nil, fmt.Errorf("expected no args or '#' where # is an int. Got args '%v'", strings.Join(args, " "))
 	}
 
-	simulationRuns, sErr := strconv.ParseUint(args[1], 10, 64)
+	simulationRuns, sErr := strconv.ParseUint(args[0], 10, 64)
 	if sErr != nil {
 		return nil, sErr
 	}
@@ -425,7 +444,7 @@ func main() {
 	}
 
 	// Gather data from sources
-	results := make(chan data.Expansion, len(expansionDataSources))
+	results := make(chan *data.Expansion, len(expansionDataSources))
 	g, ctx := errgroup.WithContext(context.Background())
 	for _, s := range expansionDataSources {
 		g.Go(func() error {
@@ -440,7 +459,7 @@ func main() {
 
 	var expansions []*data.Expansion
 	for e := range results {
-		expansions = append(expansions, &e)
+		expansions = append(expansions, e)
 	}
 
 	printBoosterDataAudit(expansions)

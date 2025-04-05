@@ -12,15 +12,15 @@ type ExpansionId = string
 type Expansion struct {
 	id                  ExpansionId
 	name                string
-	boosters            []*Booster
-	cards               []*Card
+	boosters            iter.Seq[*Booster]
+	cards               iter.Seq[*Card]
 	totalNonSecretCards uint16
 	totalSecretCards    uint16
 }
 
 func NewExpansion(
 	id ExpansionId,
-	name string, boosters []*Booster) Expansion {
+	name string, boosters []*Booster) *Expansion {
 	var cards []*Card
 	for _, b := range boosters {
 		for _, c := range b.cards {
@@ -40,11 +40,11 @@ func NewExpansion(
 		}
 	}
 
-	return Expansion{
+	return &Expansion{
 		id:                  id,
 		name:                name,
-		boosters:            boosters,
-		cards:               cards,
+		boosters:            slices.Values(boosters),
+		cards:               slices.Values(cards),
 		totalSecretCards:    totalSecretCards,
 		totalNonSecretCards: uint16(len(cards)) - totalSecretCards,
 	}
@@ -59,11 +59,11 @@ func (e *Expansion) Name() string {
 }
 
 func (e *Expansion) Cards() iter.Seq[*Card] {
-	return slices.Values(e.cards)
+	return e.cards
 }
 
 func (e *Expansion) Boosters() iter.Seq[*Booster] {
-	return slices.Values(e.boosters)
+	return e.boosters
 }
 
 func (e *Expansion) TotalNonSecretCards() uint16 {
@@ -75,17 +75,18 @@ func (e *Expansion) TotalSecretCards() uint16 {
 }
 
 func (e *Expansion) TotalCards() uint16 {
-	return uint16(len(e.cards))
+	return e.totalNonSecretCards + e.totalSecretCards
 }
 
+// TODO this can be more efficient with an array. Need to sort out
+// special case mew card first though.
 func (e *Expansion) GetCardByNumber(number ExpansionNumber) (*Card, error) {
-	cIndex := slices.IndexFunc(e.cards, func(c *Card) bool {
-		return c.number == number
-	})
-	if cIndex == -1 {
-		return nil, fmt.Errorf("no card with number %v", number)
+	for c := range e.cards {
+		if c.number == number {
+			return c, nil
+		}
 	}
-	return e.cards[cIndex], nil
+	return nil, fmt.Errorf("no card with number %v", number)
 }
 
 func (e *Expansion) GetHighestOfferingBoosterForMissingCards(
@@ -95,9 +96,10 @@ func (e *Expansion) GetHighestOfferingBoosterForMissingCards(
 		return nil, fmt.Errorf("no missing card numbers provided")
 	}
 
-	if len(e.boosters) == 1 {
-		return e.boosters[0], nil
-	}
+	// Can't do this optimisation with seq. Worth adding another way to do it?
+	// if len(e.boosters) == 1 {
+	// 	return e.boosters[0], nil
+	// }
 
 	var bestBooster *Booster
 	var bestBoosterProbability = -1.0

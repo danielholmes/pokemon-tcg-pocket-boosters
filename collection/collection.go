@@ -10,13 +10,13 @@ type UserCollection struct {
 	missingCardNumbers map[data.ExpansionId]([]data.ExpansionNumber)
 }
 
-func NewUserCollection(missingCardNumbers map[data.ExpansionId]([]data.ExpansionNumber)) UserCollection {
+func NewUserCollection(missingCardNumbers map[data.ExpansionId]([]data.ExpansionNumber)) *UserCollection {
 	for eId, m := range missingCardNumbers {
 		if slices.Contains(m, 0) {
 			panic(fmt.Sprintf("Invalid expansion number %v %v", eId, m))
 		}
 	}
-	return UserCollection{missingCardNumbers: missingCardNumbers}
+	return &UserCollection{missingCardNumbers: missingCardNumbers}
 }
 
 func (c *UserCollection) Clone() *UserCollection {
@@ -25,8 +25,7 @@ func (c *UserCollection) Clone() *UserCollection {
 		newMissingCardNumbers[eId] = slices.Clone(m)
 	}
 
-	newUserCollection := NewUserCollection(newMissingCardNumbers)
-	return &newUserCollection
+	return NewUserCollection(newMissingCardNumbers)
 }
 
 func (c *UserCollection) FirstIncompleteExpansionId() (data.ExpansionId, error) {
@@ -41,6 +40,15 @@ func (c *UserCollection) FirstIncompleteExpansionId() (data.ExpansionId, error) 
 func (c *UserCollection) MissingForExpansion(expansionId data.ExpansionId) ([]data.ExpansionNumber, bool) {
 	v, e := c.missingCardNumbers[expansionId]
 	return v, e
+}
+
+func (c *UserCollection) AddCard(
+	expansionId data.ExpansionId,
+	addedNumber data.ExpansionNumber,
+) {
+	c.missingCardNumbers[expansionId] = slices.DeleteFunc(c.missingCardNumbers[expansionId], func(n data.ExpansionNumber) bool {
+		return addedNumber == n
+	})
 }
 
 func (c *UserCollection) AddCards(

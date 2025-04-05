@@ -122,7 +122,7 @@ func fetchBoosterFile(booster *BoosterSerebiiSource) (string, error) {
 	return body, nil
 }
 
-func fetchBoosterDetails(booster *BoosterSerebiiSource, results chan<- data.Booster) error {
+func fetchBoosterDetails(booster *BoosterSerebiiSource, results chan<- *data.Booster) error {
 	var body, err = fetchBoosterFile(booster)
 	// TODO: Find idiomatic way to handle go routine errors
 	if err != nil {
@@ -225,7 +225,7 @@ func fetchBoosterDetails(booster *BoosterSerebiiSource, results chan<- data.Boos
 			number,
 			rarity,
 		)
-		cards[i] = &card
+		cards[i] = card
 	}
 
 	results <- data.NewBooster(
@@ -237,10 +237,10 @@ func fetchBoosterDetails(booster *BoosterSerebiiSource, results chan<- data.Boos
 	return nil
 }
 
-func FetchExpansionDetails(ctx context.Context, s *ExpansionSerebiiSource, results chan<- data.Expansion) error {
+func FetchExpansionDetails(ctx context.Context, s *ExpansionSerebiiSource, results chan<- *data.Expansion) error {
 	g, _ := errgroup.WithContext(ctx)
 
-	boosterResults := make(chan data.Booster, s.NumBoosterSources())
+	boosterResults := make(chan *data.Booster, s.NumBoosterSources())
 	for s := range s.BoosterSources() {
 		g.Go(func() error {
 			return fetchBoosterDetails(s, boosterResults)
@@ -254,8 +254,8 @@ func FetchExpansionDetails(ctx context.Context, s *ExpansionSerebiiSource, resul
 	close(boosterResults)
 
 	var boosters []*data.Booster
-	for o := range boosterResults {
-		boosters = append(boosters, &o)
+	for b := range boosterResults {
+		boosters = append(boosters, b)
 	}
 
 	results <- data.NewExpansion(s.Id(), s.Name(), boosters)

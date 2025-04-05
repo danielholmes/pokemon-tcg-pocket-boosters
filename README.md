@@ -42,9 +42,14 @@ go test ./...
 
 ## TODO
 
+ - Seed simulations
+   - print out seed used
+   - ability to pass a seed in as cmd line arg - verify ran exactly same
+ - Handle special case of 283 genetic apex. Not in any boosters
  - Include wonder picks. e.g. 
     - pick a rate such as average 3 boosters opened per day.
     - each 3 boosters = 1.25 wonder stamina (includes some for quests)
     - view wonder picks 2x per day = X random booster instances
     - find probability of one of those instances having a missing card
     - then apply probability of 1/5 of picking missing card, then consume stamina
+ - Include trades?

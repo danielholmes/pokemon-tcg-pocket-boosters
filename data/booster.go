@@ -146,7 +146,7 @@ func NewBooster(
 	cards []*Card,
 	offeringRates OfferingRatesTable,
 	crownExclusiveExpansionNumber ExpansionNumber,
-) Booster {
+) *Booster {
 	offerings := make([]*BoosterCardOffering, len(cards))
 	regularPack1To3List := offeringProbabilityList{}
 	regularPack4List := offeringProbabilityList{}
@@ -178,7 +178,7 @@ func NewBooster(
 		rarePackList.append(c, offeringRef.rareOffering)
 	}
 
-	return Booster{
+	return &Booster{
 		name:                          name,
 		cards:                         cards,
 		crownExclusiveExpansionNumber: crownExclusiveExpansionNumber,

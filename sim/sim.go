@@ -9,12 +9,39 @@ import (
 )
 
 type ExpansionSimRun struct {
-	numOpened    uint64
-	numRarePacks uint64
+	numOpened                      uint64
+	numPackPoints                  uint64
+	totalPackPoints                uint64
+	numCardsObtainedFromPackPoints uint64
+	numRarePacks                   uint64
+}
+
+func NewExpansionSimRun(
+	numOpened uint64,
+	numPackPoints uint64,
+	totalPackPoints uint64,
+	numCardsObtainedFromPackPoints uint64,
+	numRarePacks uint64,
+) *ExpansionSimRun {
+	return &ExpansionSimRun{
+		numOpened:                      numOpened,
+		numPackPoints:                  numPackPoints,
+		totalPackPoints:                totalPackPoints,
+		numCardsObtainedFromPackPoints: numCardsObtainedFromPackPoints,
+		numRarePacks:                   numRarePacks,
+	}
 }
 
 func (r *ExpansionSimRun) NumOpened() uint64 {
 	return r.numOpened
+}
+
+func (r *ExpansionSimRun) TotalPackPoints() uint64 {
+	return r.totalPackPoints
+}
+
+func (r *ExpansionSimRun) NumCardsObtainedFromPackPoints() uint64 {
+	return r.numCardsObtainedFromPackPoints
 }
 
 func (r *ExpansionSimRun) NumRarePacks() uint64 {
@@ -59,6 +86,35 @@ func RunSim(
 				continue
 			}
 
+			eSimRun := expansionRuns[e]
+			if eSimRun == nil {
+				eSimRun = &ExpansionSimRun{}
+				expansionRuns[e] = eSimRun
+			}
+
+			// Decide, should we trade in pack points or pick a booster?
+			// TODO: This can be more efficient by ending search early.
+			var highestPackPointsCard *data.Card
+			for _, missingNumber := range missing {
+				card, cErr := e.GetCardByNumber(missingNumber)
+				if cErr != nil {
+					panic(cErr)
+				}
+				if highestPackPointsCard == nil || card.Rarity().PackPointsToObtain() > highestPackPointsCard.Rarity().PackPointsToObtain() {
+					highestPackPointsCard = card
+				}
+			}
+			if highestPackPointsCard != nil && eSimRun.numPackPoints >= uint64(highestPackPointsCard.Rarity().PackPointsToObtain()) {
+				eSimRun.numPackPoints -= uint64(highestPackPointsCard.Rarity().PackPointsToObtain())
+				eSimRun.numCardsObtainedFromPackPoints += 1
+				simCollection.AddCard(
+					e.Id(),
+					highestPackPointsCard.Number(),
+				)
+				continue
+			}
+
+			// Not enough pack points, now we choose a booster instead.
 			simBooster, sErr := e.GetHighestOfferingBoosterForMissingCards(
 				missing,
 			)
@@ -73,12 +129,11 @@ func RunSim(
 				boosterInstance.CardNumbers(),
 			)
 
-			if expansionRuns[e] == nil {
-				expansionRuns[e] = &ExpansionSimRun{}
-			}
-			expansionRuns[e].numOpened++
+			eSimRun.numOpened++
+			eSimRun.totalPackPoints += 5
+			eSimRun.numPackPoints += 5
 			if boosterInstance.IsRare() {
-				expansionRuns[e].numRarePacks++
+				eSimRun.numRarePacks++
 			}
 		}
 	}
