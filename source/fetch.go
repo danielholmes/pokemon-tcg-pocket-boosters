@@ -241,7 +241,9 @@ func FetchExpansionDetails(ctx context.Context, s *ExpansionSerebiiSource, resul
 	g, _ := errgroup.WithContext(ctx)
 
 	boosterResults := make(chan *data.Booster, s.NumBoosterSources())
+	var boosterSources []*BoosterSerebiiSource
 	for s := range s.BoosterSources() {
+		boosterSources = append(boosterSources, s)
 		g.Go(func() error {
 			return fetchBoosterDetails(s, boosterResults)
 		})
@@ -257,6 +259,25 @@ func FetchExpansionDetails(ctx context.Context, s *ExpansionSerebiiSource, resul
 	for b := range boosterResults {
 		boosters = append(boosters, b)
 	}
+	slices.SortFunc(
+		boosters,
+		func(b1, b2 *data.Booster) int {
+			b1Index := -1
+			b2Index := -1
+			for i, s := range boosterSources {
+				if s.name == b1.Name() {
+					b1Index = i
+				}
+				if s.name == b2.Name() {
+					b2Index = i
+				}
+			}
+			if b1Index == -1 || b2Index == -1 {
+				panic("error sorting fetched boosters")
+			}
+			return b1Index - b2Index
+		},
+	)
 
 	results <- data.NewExpansion(s.Id(), s.Name(), boosters)
 	return nil

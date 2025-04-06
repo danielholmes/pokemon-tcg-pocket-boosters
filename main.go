@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
+	"math/rand/v2"
 	"os"
 	"path/filepath"
 	"slices"
-	"strconv"
-	"strings"
 
 	"ptcgpocket/collection"
 	"ptcgpocket/data"
@@ -327,27 +327,39 @@ type expansionSimRunAmounts struct {
 
 func runSimulations(
 	title string,
-	numRuns uint64,
+	runMode *runOptions,
 	expansions []*data.Expansion,
 	userCollection *collection.UserCollection,
 	completePredicate sim.ExpansionSimCompletePredicate,
 ) error {
-	printer.Printf("# %v - pack opening simulations (%d runs)\n", title, numRuns)
+	printer.Printf("# %v - pack opening simulations (%d runs)\n", title, runMode.simulationRuns)
+	fmt.Printf("  Seed: %v\n", runMode.randomSeed)
 	fmt.Println("  The number of booster openings required to complete the collection.")
 
-	if numRuns == 0 {
+	if runMode.simulationRuns == 0 {
 		return nil
+	}
+
+	// TODO: Problem with using same value twice?
+	rootRand := rand.New(rand.NewPCG(runMode.randomSeed, runMode.randomSeed))
+	simRands := make([]*rand.Rand, runMode.simulationRuns)
+	for i := range runMode.simulationRuns {
+		seed1 := rootRand.Uint64()
+		seed2 := rootRand.Uint64()
+		simRands[i] = rand.New(rand.NewPCG(seed1, seed2))
 	}
 
 	g, _ := errgroup.WithContext(context.Background())
 
-	simResults := make(chan *sim.SimRun, numRuns)
-	for range numRuns {
+	simResults := make(chan *sim.SimRun, runMode.simulationRuns)
+	for i := range runMode.simulationRuns {
+		runRand := simRands[i]
 		g.Go(func() error {
 			r, rErr := sim.RunSim(
 				expansions,
 				userCollection,
 				completePredicate,
+				runRand,
 			)
 			if rErr != nil {
 				return rErr
@@ -385,12 +397,12 @@ func runSimulations(
 	var averagesTotal uint64
 	for e, t := range expansionTotals {
 		expansionAverages[e] = &expansionSimRunAmounts{
-			numOpened:                      t.numOpened / numRuns,
-			totalPackPoints:                t.totalPackPoints / numRuns,
-			numCardsObtainedFromPackPoints: t.numCardsObtainedFromPackPoints / numRuns,
-			numRarePacks:                   t.numRarePacks / numRuns,
+			numOpened:                      t.numOpened / runMode.simulationRuns,
+			totalPackPoints:                t.totalPackPoints / runMode.simulationRuns,
+			numCardsObtainedFromPackPoints: t.numCardsObtainedFromPackPoints / runMode.simulationRuns,
+			numRarePacks:                   t.numRarePacks / runMode.simulationRuns,
 		}
-		averagesTotal += t.numOpened / numRuns
+		averagesTotal += t.numOpened / runMode.simulationRuns
 	}
 	printer.Printf("  Calculated via a Monte Carlo simulation of %d pack openings\n", total)
 	fmt.Println()
@@ -409,26 +421,17 @@ func runSimulations(
 	return nil
 }
 
-type runMode struct {
+type runOptions struct {
 	simulationRuns uint64
+	randomSeed     uint64
 }
 
-func readRunMode() (*runMode, error) {
-	args := os.Args[1:]
-	if len(args) == 0 {
-		return &runMode{simulationRuns: 10}, nil
-	}
+func readRunMode() (*runOptions, error) {
+	simRunsPointer := flag.Uint64("r", 10, "number of sim runs")
+	randomSeedPointer := flag.Uint64("s", rand.Uint64(), "sim random seed")
+	flag.Parse()
 
-	if len(args) != 1 {
-		return nil, fmt.Errorf("expected no args or '#' where # is an int. Got args '%v'", strings.Join(args, " "))
-	}
-
-	simulationRuns, sErr := strconv.ParseUint(args[0], 10, 64)
-	if sErr != nil {
-		return nil, sErr
-	}
-
-	return &runMode{simulationRuns: simulationRuns}, nil
+	return &runOptions{simulationRuns: *simRunsPointer, randomSeed: *randomSeedPointer}, nil
 }
 
 func main() {
@@ -461,6 +464,22 @@ func main() {
 	for e := range results {
 		expansions = append(expansions, e)
 	}
+	slices.SortFunc(expansions, func(e1 *data.Expansion, e2 *data.Expansion) int {
+		e1Index := -1
+		e2Index := -1
+		for i, s := range expansionDataSources {
+			if s.Id() == e1.Id() {
+				e1Index = i
+			}
+			if s.Id() == e2.Id() {
+				e2Index = i
+			}
+		}
+		if e1Index == -1 || e2Index == -1 {
+			panic("error sorting expansions")
+		}
+		return e1Index - e2Index
+	})
 
 	printBoosterDataAudit(expansions)
 	fmt.Println()
@@ -470,7 +489,7 @@ func main() {
 	fmt.Println()
 	runSimulations(
 		"Whole collection",
-		runMode.simulationRuns,
+		runMode,
 		expansions,
 		userCollection,
 		func(e *data.Expansion, m []data.ExpansionNumber) bool {
@@ -480,7 +499,7 @@ func main() {
 	fmt.Println()
 	runSimulations(
 		"Non-secret cards collection",
-		runMode.simulationRuns,
+		runMode,
 		expansions,
 		userCollection,
 		func(e *data.Expansion, m []data.ExpansionNumber) bool {

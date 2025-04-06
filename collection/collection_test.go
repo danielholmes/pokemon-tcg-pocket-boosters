@@ -13,8 +13,7 @@ func TestCreateNewCollectionWithAddedCards(t *testing.T) {
 		},
 	)
 
-	collection.AddCards(
-		"genetic-apex",
+	collection.expansions["genetic-apex"].AddCardsFromBooster(
 		[5]data.ExpansionNumber{1, 3, 99, 100, 101},
 	)
 

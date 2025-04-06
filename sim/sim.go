@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"iter"
 	"maps"
+	"math/rand/v2"
 	"ptcgpocket/collection"
 	"ptcgpocket/data"
 )
 
 type ExpansionSimRun struct {
 	numOpened                      uint64
-	numPackPoints                  uint64
 	totalPackPoints                uint64
 	numCardsObtainedFromPackPoints uint64
 	numRarePacks                   uint64
@@ -18,14 +18,12 @@ type ExpansionSimRun struct {
 
 func NewExpansionSimRun(
 	numOpened uint64,
-	numPackPoints uint64,
 	totalPackPoints uint64,
 	numCardsObtainedFromPackPoints uint64,
 	numRarePacks uint64,
 ) *ExpansionSimRun {
 	return &ExpansionSimRun{
 		numOpened:                      numOpened,
-		numPackPoints:                  numPackPoints,
 		totalPackPoints:                totalPackPoints,
 		numCardsObtainedFromPackPoints: numCardsObtainedFromPackPoints,
 		numRarePacks:                   numRarePacks,
@@ -70,12 +68,14 @@ func RunSim(
 	expansions []*data.Expansion,
 	userCollection *collection.UserCollection,
 	expansionCompletePredicate ExpansionSimCompletePredicate,
+	randomGenerator *rand.Rand,
 ) (*SimRun, error) {
 	simCollection := userCollection.Clone()
 	expansionRuns := make(map[*data.Expansion]*ExpansionSimRun)
 	for _, e := range expansions {
 		isExpansionComplete := false
 		for !isExpansionComplete {
+			eCollection := simCollection.GetExpansionCollection(e.Id())
 			missing, missingFound := simCollection.MissingForExpansion(e.Id())
 			if !missingFound {
 				panic("No missing found")
@@ -104,13 +104,9 @@ func RunSim(
 					highestPackPointsCard = card
 				}
 			}
-			if highestPackPointsCard != nil && eSimRun.numPackPoints >= uint64(highestPackPointsCard.Rarity().PackPointsToObtain()) {
-				eSimRun.numPackPoints -= uint64(highestPackPointsCard.Rarity().PackPointsToObtain())
+			if highestPackPointsCard != nil && eCollection.PackPoints() >= highestPackPointsCard.Rarity().PackPointsToObtain() {
+				eCollection.AcquireCardUsingPackPoints(highestPackPointsCard)
 				eSimRun.numCardsObtainedFromPackPoints += 1
-				simCollection.AddCard(
-					e.Id(),
-					highestPackPointsCard.Number(),
-				)
 				continue
 			}
 
@@ -123,15 +119,12 @@ func RunSim(
 				panic("should be able to find booster for missing number")
 			}
 
-			boosterInstance := simBooster.CreateRandomInstance()
-			simCollection.AddCards(
-				e.Id(),
-				boosterInstance.CardNumbers(),
-			)
+			boosterInstance := simBooster.CreateRandomInstance(randomGenerator)
+			// fmt.Printf("C %v \n", boosterInstance.CardNumbers())
+			eCollection.AddCardsFromBooster(boosterInstance.CardNumbers())
 
 			eSimRun.numOpened++
 			eSimRun.totalPackPoints += 5
-			eSimRun.numPackPoints += 5
 			if boosterInstance.IsRare() {
 				eSimRun.numRarePacks++
 			}

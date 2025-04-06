@@ -20,7 +20,9 @@ type Expansion struct {
 
 func NewExpansion(
 	id ExpansionId,
-	name string, boosters []*Booster) *Expansion {
+	name string,
+	boosters []*Booster,
+) *Expansion {
 	var cards []*Card
 	for _, b := range boosters {
 		for _, c := range b.cards {
@@ -111,7 +113,7 @@ func (e *Expansion) GetHighestOfferingBoosterForMissingCards(
 		}
 	}
 
-	if bestBoosterProbability == 0.0 {
+	if bestBoosterProbability <= 0.0 {
 		return nil, fmt.Errorf("no booster offering any card number")
 	}
 

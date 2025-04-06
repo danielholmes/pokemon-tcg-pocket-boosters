@@ -42,9 +42,8 @@ go test ./...
 
 ## TODO
 
- - Seed simulations
-   - print out seed used
-   - ability to pass a seed in as cmd line arg - verify ran exactly same
+ - Add pack points to config
+ - Stop using primitive values in collections (i.e. numbers)
  - Handle special case of 283 genetic apex. Not in any boosters
  - Include wonder picks. e.g. 
     - pick a rate such as average 3 boosters opened per day.

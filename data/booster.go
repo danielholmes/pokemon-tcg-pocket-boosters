@@ -120,8 +120,8 @@ func (o *offeringProbabilityList) append(card *Card, probability float64) {
 	})
 }
 
-func (o *offeringProbabilityList) pickRandomCard() *Card {
-	num := rand.Float64() * o.totalProbability
+func (o *offeringProbabilityList) pickRandomCard(randomGenerator *rand.Rand) *Card {
+	num := randomGenerator.Float64() * o.totalProbability
 	for _, e := range o.entries {
 		if num <= e.cumulativeProbability {
 			return e.card
@@ -208,17 +208,19 @@ func (b *Booster) GetInstanceProbabilityForMissing(missing []ExpansionNumber) fl
 	return totalOfferingMissing
 }
 
-func (b *Booster) CreateRandomInstance() *BoosterInstance {
+func (b *Booster) CreateRandomInstance(randomGenerator *rand.Rand) *BoosterInstance {
 	// Rare pack
-	if rand.Float64() < RarePackRate {
+	rareNum := randomGenerator.Float64()
+	// fmt.Printf("%v\n", rareNum)
+	if rareNum < RarePackRate {
 		return NewBoosterInstance(
 			true,
 			[5]*Card{
-				b.rarePackList.pickRandomCard(),
-				b.rarePackList.pickRandomCard(),
-				b.rarePackList.pickRandomCard(),
-				b.rarePackList.pickRandomCard(),
-				b.rarePackList.pickRandomCard(),
+				b.rarePackList.pickRandomCard(randomGenerator),
+				b.rarePackList.pickRandomCard(randomGenerator),
+				b.rarePackList.pickRandomCard(randomGenerator),
+				b.rarePackList.pickRandomCard(randomGenerator),
+				b.rarePackList.pickRandomCard(randomGenerator),
 			})
 	}
 
@@ -226,10 +228,10 @@ func (b *Booster) CreateRandomInstance() *BoosterInstance {
 	return NewBoosterInstance(
 		false,
 		[5]*Card{
-			b.regularPack1To3List.pickRandomCard(),
-			b.regularPack1To3List.pickRandomCard(),
-			b.regularPack1To3List.pickRandomCard(),
-			b.regularPack4List.pickRandomCard(),
-			b.regularPack5List.pickRandomCard(),
+			b.regularPack1To3List.pickRandomCard(randomGenerator),
+			b.regularPack1To3List.pickRandomCard(randomGenerator),
+			b.regularPack1To3List.pickRandomCard(randomGenerator),
+			b.regularPack4List.pickRandomCard(randomGenerator),
+			b.regularPack5List.pickRandomCard(randomGenerator),
 		})
 }
