@@ -50,7 +50,6 @@ go test ./...
 
 ## TODO
 
- - Stop using primitive values in collections (i.e. numbers)
  - Show fractional open packs value
  - Handle special case of 283 genetic apex. Not in any boosters.
  - Include wonder picks? 

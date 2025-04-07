@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"ptcgpocket/data"
+	"slices"
 )
 
 type serialisedExpansionCollection struct {
@@ -12,7 +13,7 @@ type serialisedExpansionCollection struct {
 	PackPoints uint16                     `json:"packPoints"`
 }
 
-func ReadFromFilepath(filepath string) (*UserCollection, error) {
+func ReadFromFilepath(filepath string, expansions []*data.Expansion) (*UserCollection, error) {
 	raw, err := os.ReadFile(filepath)
 	if err != nil {
 		return nil, err
@@ -26,10 +27,25 @@ func ReadFromFilepath(filepath string) (*UserCollection, error) {
 
 	expansionCollections := make(map[data.ExpansionId]*ExpansionCollection, len(serialisedCollections))
 	for i, s := range serialisedCollections {
-		fmt.Printf("%v: %v\n", i, s)
+		eIndex := slices.IndexFunc(expansions, func(e *data.Expansion) bool {
+			return e.Id() == i
+		})
+		if eIndex == -1 {
+			panic(fmt.Sprintf("expansion id %v unrecognised", i))
+		}
+
+		e := expansions[eIndex]
+		missingCards := make([]*data.Card, len(s.Missing))
+		for i, m := range s.Missing {
+			c, cErr := e.GetCardByNumber(m)
+			if cErr != nil {
+				panic(cErr)
+			}
+			missingCards[i] = c
+		}
 		expansionCollections[i] = &ExpansionCollection{
-			missingCardNumbers: s.Missing,
-			packPoints:         s.PackPoints,
+			missingCards: missingCards,
+			packPoints:   s.PackPoints,
 		}
 	}
 

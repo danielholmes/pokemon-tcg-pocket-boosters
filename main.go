@@ -190,7 +190,7 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 	),
 }
 
-func readUserCollection() (*collection.UserCollection, error) {
+func readUserCollection(expansions []*data.Expansion) (*collection.UserCollection, error) {
 	dir, dErr := os.Getwd()
 	if dErr != nil {
 		return nil, dErr
@@ -198,7 +198,7 @@ func readUserCollection() (*collection.UserCollection, error) {
 
 	collectionFilepath := filepath.Join(dir, "collection.json")
 
-	return collection.ReadFromFilepath(collectionFilepath)
+	return collection.ReadFromFilepath(collectionFilepath, expansions)
 }
 
 func printBoosterDataAudit(expansions []*data.Expansion) {
@@ -247,7 +247,7 @@ func printCurrentCollectionStats(expansions []*data.Expansion, userCollection *c
 		totalNonSecretCardsCollected := 0
 		totalShinySecretCardsCollected := 0
 		for c := range s.Cards() {
-			if !slices.Contains(missing, c.Number()) {
+			if !slices.Contains(missing, c) {
 				if c.Rarity().IsStar() {
 					totalStarSecretCardsCollected += 1
 				} else if c.Rarity().IsCrown() {
@@ -399,12 +399,6 @@ func main() {
 		panic(rErr)
 	}
 
-	// Loading collection
-	userCollection, uErr := readUserCollection()
-	if uErr != nil {
-		panic(uErr)
-	}
-
 	// Gather data from sources
 	results := make(chan *data.Expansion, len(expansionDataSources))
 	g, ctx := errgroup.WithContext(context.Background())
@@ -429,6 +423,12 @@ func main() {
 		return indexMap[e1.Id()] - indexMap[e2.Id()]
 	})
 
+	// Loading collection
+	userCollection, uErr := readUserCollection(expansions)
+	if uErr != nil {
+		panic(uErr)
+	}
+
 	printBoosterDataAudit(expansions)
 	fmt.Println()
 	printCurrentCollectionStats(expansions, userCollection)
@@ -440,7 +440,7 @@ func main() {
 		runMode,
 		expansions,
 		userCollection,
-		func(e *data.Expansion, m []data.ExpansionCardNumber) bool {
+		func(e *data.Expansion, m []*data.Card) bool {
 			return len(m) == 0
 		},
 	)
@@ -450,12 +450,8 @@ func main() {
 		runMode,
 		expansions,
 		userCollection,
-		func(e *data.Expansion, m []data.ExpansionCardNumber) bool {
-			for _, id := range m {
-				card, cErr := e.GetCardByNumber(id)
-				if cErr != nil {
-					panic(cErr)
-				}
+		func(e *data.Expansion, m []*data.Card) bool {
+			for _, card := range m {
 				if !card.Rarity().IsSecret() {
 					return false
 				}

@@ -92,9 +92,9 @@ func (e *Expansion) GetCardByNumber(number ExpansionCardNumber) (*Card, error) {
 }
 
 func (e *Expansion) GetHighestOfferingBoosterForMissingCards(
-	missingCardNumbers []ExpansionCardNumber,
+	missingCards []*Card,
 ) (*Booster, error) {
-	if len(missingCardNumbers) == 0 {
+	if len(missingCards) == 0 {
 		return nil, fmt.Errorf("no missing card numbers provided")
 	}
 
@@ -106,7 +106,7 @@ func (e *Expansion) GetHighestOfferingBoosterForMissingCards(
 	var bestBooster *Booster
 	var bestBoosterProbability = -1.0
 	for b := range e.Boosters() {
-		boosterProbability := b.GetInstanceProbabilityForMissing(missingCardNumbers)
+		boosterProbability := b.GetInstanceProbabilityForMissing(missingCards)
 		if boosterProbability > bestBoosterProbability {
 			bestBoosterProbability = boosterProbability
 			bestBooster = b

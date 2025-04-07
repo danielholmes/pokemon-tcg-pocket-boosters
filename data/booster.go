@@ -75,23 +75,19 @@ func (b *BoosterCardOffering) OverallPackOffering() float64 {
 
 type BoosterInstance struct {
 	isRare bool
-	cards  [5]*Card
+	cards  iter.Seq[*Card]
 }
 
 func NewBoosterInstance(isRare bool, cards [5]*Card) *BoosterInstance {
-	return &BoosterInstance{isRare: isRare, cards: cards}
+	return &BoosterInstance{isRare: isRare, cards: slices.Values(cards[:])}
 }
 
 func (b *BoosterInstance) IsRare() bool {
 	return b.isRare
 }
 
-func (b *BoosterInstance) CardNumbers() [5]ExpansionCardNumber {
-	var numbers [5]ExpansionCardNumber
-	for i, c := range b.cards {
-		numbers[i] = c.Number()
-	}
-	return numbers
+func (b *BoosterInstance) Cards() iter.Seq[*Card] {
+	return b.cards
 }
 
 type OfferingRatesTable map[*Rarity]BoosterOffering
@@ -198,10 +194,10 @@ func (b *Booster) Offerings() iter.Seq[*BoosterCardOffering] {
 	return b.offerings
 }
 
-func (b *Booster) GetInstanceProbabilityForMissing(missing []ExpansionCardNumber) float64 {
+func (b *Booster) GetInstanceProbabilityForMissing(missing []*Card) float64 {
 	totalOfferingMissing := 0.0
 	for o := range b.Offerings() {
-		if slices.Contains(missing, o.Card().Number()) {
+		if slices.Contains(missing, o.Card()) {
 			totalOfferingMissing += o.OverallPackOffering()
 		}
 	}

@@ -65,7 +65,7 @@ func (r *SimRun) ExpansionRuns() iter.Seq2[*data.Expansion, *ExpansionSimRun] {
 	return maps.All(r.expansionRuns)
 }
 
-type ExpansionSimCompletePredicate func(*data.Expansion, []data.ExpansionCardNumber) bool
+type ExpansionSimCompletePredicate func(*data.Expansion, []*data.Card) bool
 
 func RunSim(
 	expansions []*data.Expansion,
@@ -98,11 +98,7 @@ func RunSim(
 			// Decide, should we trade in pack points or pick a booster?
 			// TODO: This can be more efficient by ending search early.
 			var highestPackPointsCard *data.Card
-			for _, missingNumber := range missing {
-				card, cErr := e.GetCardByNumber(missingNumber)
-				if cErr != nil {
-					panic(cErr)
-				}
+			for _, card := range missing {
 				if highestPackPointsCard == nil || card.Rarity().PackPointsToObtain() > highestPackPointsCard.Rarity().PackPointsToObtain() {
 					highestPackPointsCard = card
 				}
@@ -124,7 +120,7 @@ func RunSim(
 
 			boosterInstance := simBooster.CreateRandomInstance(randomGenerator)
 			// fmt.Printf("C %v \n", boosterInstance.CardNumbers())
-			eCollection.AddCardsFromBooster(boosterInstance.CardNumbers())
+			eCollection.AcquireCardsFromBooster(boosterInstance.Cards())
 
 			eSimRun.numOpened++
 			eSimRun.totalPackPoints += 5
