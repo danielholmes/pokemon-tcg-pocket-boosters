@@ -13,19 +13,27 @@ A utility to work out which booster pack gives you the highest chance of receivi
 
 ## Configuring
 
-Add a `/collection.json` file which contains a map of `%expansionId% data.ExpansionId` : `[]data.ExpansionNumber`. See `/collection.json.example` for an example.
+Add a `/collection.json` file which contains a map of `%expansionId% data.ExpansionId` : `[]data.ExpansionCardNumber`. See `/collection.json.example` for an example.
+
+
+## Building
 
 
 ## Running
 
-Execute (no simulation):
+Execute with default options:
 ```
-go run main.go
+./ptcgpocket
 ```
 
 Execute (simulation of 200 runs):
 ```
-go run main.go sim 200
+./ptcgpocket -r 200
+```
+
+Execute (simulation of 15 runs with a known simulation seed):
+```
+./ptcgpocket -r 15 -s 123
 ```
 
 Static analysis:
@@ -42,10 +50,10 @@ go test ./...
 
 ## TODO
 
- - Add pack points to config
  - Stop using primitive values in collections (i.e. numbers)
- - Handle special case of 283 genetic apex. Not in any boosters
- - Include wonder picks. e.g. 
+ - Show fractional open packs value
+ - Handle special case of 283 genetic apex. Not in any boosters.
+ - Include wonder picks? 
     - pick a rate such as average 3 boosters opened per day.
     - each 3 boosters = 1.25 wonder stamina (includes some for quests)
     - view wonder picks 2x per day = X random booster instances

@@ -1,12 +1,15 @@
 package sim
 
 import (
+	"context"
 	"fmt"
 	"iter"
 	"maps"
 	"math/rand/v2"
 	"ptcgpocket/collection"
 	"ptcgpocket/data"
+
+	"golang.org/x/sync/errgroup"
 )
 
 type ExpansionSimRun struct {
@@ -62,7 +65,7 @@ func (r *SimRun) ExpansionRuns() iter.Seq2[*data.Expansion, *ExpansionSimRun] {
 	return maps.All(r.expansionRuns)
 }
 
-type ExpansionSimCompletePredicate func(*data.Expansion, []data.ExpansionNumber) bool
+type ExpansionSimCompletePredicate func(*data.Expansion, []data.ExpansionCardNumber) bool
 
 func RunSim(
 	expansions []*data.Expansion,
@@ -132,4 +135,53 @@ func RunSim(
 	}
 
 	return &SimRun{expansionRuns: expansionRuns}, nil
+}
+
+func RunAllSimulations(
+	expansions []*data.Expansion,
+	userCollection *collection.UserCollection,
+	completePredicate ExpansionSimCompletePredicate,
+	runs uint64,
+	randomSeed uint64,
+	ctx context.Context,
+	results chan<- *SimRun,
+) error {
+	if runs == 0 {
+		return nil
+	}
+
+	// TODO: Problem with using same value twice?
+	rootRand := rand.New(rand.NewPCG(randomSeed, randomSeed))
+	simRands := make([]*rand.Rand, runs)
+	for i := range runs {
+		seed1 := rootRand.Uint64()
+		seed2 := rootRand.Uint64()
+		simRands[i] = rand.New(rand.NewPCG(seed1, seed2))
+	}
+
+	g, _ := errgroup.WithContext(ctx)
+
+	for i := range runs {
+		runRand := simRands[i]
+		g.Go(func() error {
+			r, rErr := RunSim(
+				expansions,
+				userCollection,
+				completePredicate,
+				runRand,
+			)
+			if rErr != nil {
+				return rErr
+			}
+
+			results <- r
+			return nil
+		})
+	}
+	err := g.Wait()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

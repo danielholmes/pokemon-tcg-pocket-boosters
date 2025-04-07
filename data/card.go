@@ -65,17 +65,17 @@ func (c *BaseCard) Name() string {
 	return c.name
 }
 
-type ExpansionNumber uint16
+type ExpansionCardNumber uint16
 
 type Card struct {
 	core   *BaseCard
-	number ExpansionNumber
+	number ExpansionCardNumber
 	rarity *Rarity
 }
 
 func NewCard(
 	core *BaseCard,
-	number ExpansionNumber,
+	number ExpansionCardNumber,
 	rarity *Rarity,
 ) *Card {
 	return &Card{core: core, number: number, rarity: rarity}
@@ -93,6 +93,6 @@ func (c *Card) Rarity() *Rarity {
 	return c.rarity
 }
 
-func (c *Card) Number() ExpansionNumber {
+func (c *Card) Number() ExpansionCardNumber {
 	return c.number
 }

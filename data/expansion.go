@@ -82,7 +82,7 @@ func (e *Expansion) TotalCards() uint16 {
 
 // TODO this can be more efficient with an array. Need to sort out
 // special case mew card first though.
-func (e *Expansion) GetCardByNumber(number ExpansionNumber) (*Card, error) {
+func (e *Expansion) GetCardByNumber(number ExpansionCardNumber) (*Card, error) {
 	for c := range e.cards {
 		if c.number == number {
 			return c, nil
@@ -92,7 +92,7 @@ func (e *Expansion) GetCardByNumber(number ExpansionNumber) (*Card, error) {
 }
 
 func (e *Expansion) GetHighestOfferingBoosterForMissingCards(
-	missingCardNumbers []ExpansionNumber,
+	missingCardNumbers []ExpansionCardNumber,
 ) (*Booster, error) {
 	if len(missingCardNumbers) == 0 {
 		return nil, fmt.Errorf("no missing card numbers provided")

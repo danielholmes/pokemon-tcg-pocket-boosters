@@ -10,14 +10,14 @@ type BoosterSerebiiSource struct {
 	name                          string
 	serebiiUrl                    string
 	offeringRates                 data.OfferingRatesTable
-	crownExclusiveExpansionNumber data.ExpansionNumber
+	crownExclusiveExpansionNumber data.ExpansionCardNumber
 }
 
 func NewBoosterSerebiiSource(
 	name string,
 	serebiiUrl string,
 	offeringRates data.OfferingRatesTable,
-	crownExclusiveExpansionNumber data.ExpansionNumber,
+	crownExclusiveExpansionNumber data.ExpansionCardNumber,
 ) *BoosterSerebiiSource {
 	return &BoosterSerebiiSource{
 		name:                          name,
@@ -31,7 +31,7 @@ func (b *BoosterSerebiiSource) Name() string {
 	return b.name
 }
 
-func (b *BoosterSerebiiSource) CrownExclusiveExpansionNumber() data.ExpansionNumber {
+func (b *BoosterSerebiiSource) CrownExclusiveExpansionNumber() data.ExpansionCardNumber {
 	return b.crownExclusiveExpansionNumber
 }
 

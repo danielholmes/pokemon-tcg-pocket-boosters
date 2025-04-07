@@ -155,7 +155,7 @@ func fetchBoosterDetails(booster *BoosterSerebiiSource, results chan<- *data.Boo
 		}
 
 		// Number
-		var number data.ExpansionNumber
+		var number data.ExpansionCardNumber
 		numRe := regexp.MustCompile("([0-9]+?) / ([0-9]+)")
 		var imageNode *html.Node
 		for d := range cells[0].Descendants() {
@@ -166,7 +166,7 @@ func fetchBoosterDetails(booster *BoosterSerebiiSource, results chan<- *data.Boo
 			dMatch := numRe.FindStringSubmatch(d.Data)
 			if dMatch != nil {
 				value, _ := strconv.ParseUint(dMatch[1], 10, 16)
-				number = data.ExpansionNumber(value)
+				number = data.ExpansionCardNumber(value)
 			}
 		}
 
@@ -241,9 +241,11 @@ func FetchExpansionDetails(ctx context.Context, s *ExpansionSerebiiSource, resul
 	g, _ := errgroup.WithContext(ctx)
 
 	boosterResults := make(chan *data.Booster, s.NumBoosterSources())
-	var boosterSources []*BoosterSerebiiSource
+	boosterSources := make(map[string]int, s.NumBoosterSources())
+	i := 0
 	for s := range s.BoosterSources() {
-		boosterSources = append(boosterSources, s)
+		boosterSources[s.Name()] = i
+		i++
 		g.Go(func() error {
 			return fetchBoosterDetails(s, boosterResults)
 		})
@@ -262,20 +264,7 @@ func FetchExpansionDetails(ctx context.Context, s *ExpansionSerebiiSource, resul
 	slices.SortFunc(
 		boosters,
 		func(b1, b2 *data.Booster) int {
-			b1Index := -1
-			b2Index := -1
-			for i, s := range boosterSources {
-				if s.name == b1.Name() {
-					b1Index = i
-				}
-				if s.name == b2.Name() {
-					b2Index = i
-				}
-			}
-			if b1Index == -1 || b2Index == -1 {
-				panic("error sorting fetched boosters")
-			}
-			return b1Index - b2Index
+			return boosterSources[b1.Name()] - boosterSources[b2.Name()]
 		},
 	)
 

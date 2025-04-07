@@ -7,14 +7,14 @@ import (
 
 func TestCreateNewCollectionWithAddedCards(t *testing.T) {
 	collection := NewUserCollection(
-		map[data.ExpansionId]([]data.ExpansionNumber){
-			"genetic-apex":    {1, 2, 3},
-			"mythical-island": {1, 2, 3},
+		map[data.ExpansionId]*ExpansionCollection{
+			"genetic-apex":    &ExpansionCollection{missingCardNumbers: []data.ExpansionCardNumber{1, 2, 3}},
+			"mythical-island": &ExpansionCollection{missingCardNumbers: []data.ExpansionCardNumber{1, 2, 3}},
 		},
 	)
 
 	collection.expansions["genetic-apex"].AddCardsFromBooster(
-		[5]data.ExpansionNumber{1, 3, 99, 100, 101},
+		[5]data.ExpansionCardNumber{1, 3, 99, 100, 101},
 	)
 
 	newMissingForGenetic, _ := collection.MissingForExpansion("genetic-apex")

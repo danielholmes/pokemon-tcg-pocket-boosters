@@ -86,8 +86,8 @@ func (b *BoosterInstance) IsRare() bool {
 	return b.isRare
 }
 
-func (b *BoosterInstance) CardNumbers() [5]ExpansionNumber {
-	var numbers [5]ExpansionNumber
+func (b *BoosterInstance) CardNumbers() [5]ExpansionCardNumber {
+	var numbers [5]ExpansionCardNumber
 	for i, c := range b.cards {
 		numbers[i] = c.Number()
 	}
@@ -133,7 +133,7 @@ func (o *offeringProbabilityList) pickRandomCard(randomGenerator *rand.Rand) *Ca
 type Booster struct {
 	name                          string
 	cards                         []*Card
-	crownExclusiveExpansionNumber ExpansionNumber
+	crownExclusiveExpansionNumber ExpansionCardNumber
 	offerings                     iter.Seq[*BoosterCardOffering]
 	regularPack1To3List           *offeringProbabilityList
 	regularPack4List              *offeringProbabilityList
@@ -145,7 +145,7 @@ func NewBooster(
 	name string,
 	cards []*Card,
 	offeringRates OfferingRatesTable,
-	crownExclusiveExpansionNumber ExpansionNumber,
+	crownExclusiveExpansionNumber ExpansionCardNumber,
 ) *Booster {
 	offerings := make([]*BoosterCardOffering, len(cards))
 	regularPack1To3List := offeringProbabilityList{}
@@ -198,7 +198,7 @@ func (b *Booster) Offerings() iter.Seq[*BoosterCardOffering] {
 	return b.offerings
 }
 
-func (b *Booster) GetInstanceProbabilityForMissing(missing []ExpansionNumber) float64 {
+func (b *Booster) GetInstanceProbabilityForMissing(missing []ExpansionCardNumber) float64 {
 	totalOfferingMissing := 0.0
 	for o := range b.Offerings() {
 		if slices.Contains(missing, o.Card().Number()) {

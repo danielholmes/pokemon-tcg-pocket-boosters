@@ -14,8 +14,6 @@ import (
 	"ptcgpocket/sim"
 	"ptcgpocket/source"
 
-	"encoding/json"
-
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
@@ -200,18 +198,7 @@ func readUserCollection() (*collection.UserCollection, error) {
 
 	collectionFilepath := filepath.Join(dir, "collection.json")
 
-	raw, err := os.ReadFile(collectionFilepath)
-	if err != nil {
-		return nil, err
-	}
-
-	var allMissing map[data.ExpansionId]([]data.ExpansionNumber)
-	uErr := json.Unmarshal(raw, &allMissing)
-	if uErr != nil {
-		return nil, uErr
-	}
-
-	return collection.NewUserCollection(allMissing), nil
+	return collection.ReadFromFilepath(collectionFilepath)
 }
 
 func printBoosterDataAudit(expansions []*data.Expansion) {
@@ -232,17 +219,14 @@ func printBoosterDataAudit(expansions []*data.Expansion) {
 				totalFifthOffering += c.FifthCardOffering()
 				totalRareCardOffering += c.RareCardOffering()
 			}
-			fmt.Printf(
-				" ## %v - %v\n   1-3: %.2f / 100%%\n   4: %.2f / 100%%\n   5: %.2f / 100%%\n   total regular: %.2f / 500%%\n   rare: %.2f / 100%%\n   total rare: %.2f / 500%%\n   \n",
-				e.Name(),
-				b.Name(),
-				totalFirstToThirdOffering,
-				totalFourthOffering,
-				totalFifthOffering,
-				totalRegularPackOffering,
-				totalRareCardOffering,
-				totalRarePackOffering,
-			)
+			fmt.Printf(" ## %v - %v\n", e.Name(), b.Name())
+			fmt.Printf("   1-3: %.2f / 100%%\n", totalFirstToThirdOffering)
+			fmt.Printf("   4: %.2f / 100%%\n", totalFourthOffering)
+			fmt.Printf("   5: %.2f / 100%%\n", totalFifthOffering)
+			fmt.Printf("   total regular: %.2f / 500%%\n", totalRegularPackOffering)
+			fmt.Printf("   rare: %.2f / 500%%\n", totalRareCardOffering)
+			fmt.Printf("   total rare: %.2f / 500%%\n", totalRarePackOffering)
+			fmt.Println()
 		}
 	}
 }
@@ -275,7 +259,10 @@ func printCurrentCollectionStats(expansions []*data.Expansion, userCollection *c
 				}
 			}
 		}
-		totalCollectedIncludingSecrets := totalStarSecretCardsCollected + totalShinySecretCardsCollected + totalCrownSecretCardsCollected + totalNonSecretCardsCollected
+		totalCollectedIncludingSecrets := totalStarSecretCardsCollected +
+			totalShinySecretCardsCollected +
+			totalCrownSecretCardsCollected +
+			totalNonSecretCardsCollected
 		fmt.Printf(
 			"    %v / %v (%v%%) %v★ %v✵ %v♕ Inc. secret %v / %v (%v%%)\n",
 			totalNonSecretCardsCollected,
@@ -308,7 +295,7 @@ func printBoosterProbabilities(expansions []*data.Expansion, userCollection *col
 			})
 		}
 	}
-	slices.SortFunc(allBoosters, func(a boosterWithOrigin, b boosterWithOrigin) int {
+	slices.SortFunc(allBoosters, func(a, b boosterWithOrigin) int {
 		return int(1000*b.totalOfferingMissing) - int(1000*a.totalOfferingMissing)
 	})
 
@@ -336,44 +323,16 @@ func runSimulations(
 	fmt.Printf("  Seed: %v\n", runMode.randomSeed)
 	fmt.Println("  The number of booster openings required to complete the collection.")
 
-	if runMode.simulationRuns == 0 {
-		return nil
-	}
-
-	// TODO: Problem with using same value twice?
-	rootRand := rand.New(rand.NewPCG(runMode.randomSeed, runMode.randomSeed))
-	simRands := make([]*rand.Rand, runMode.simulationRuns)
-	for i := range runMode.simulationRuns {
-		seed1 := rootRand.Uint64()
-		seed2 := rootRand.Uint64()
-		simRands[i] = rand.New(rand.NewPCG(seed1, seed2))
-	}
-
-	g, _ := errgroup.WithContext(context.Background())
-
 	simResults := make(chan *sim.SimRun, runMode.simulationRuns)
-	for i := range runMode.simulationRuns {
-		runRand := simRands[i]
-		g.Go(func() error {
-			r, rErr := sim.RunSim(
-				expansions,
-				userCollection,
-				completePredicate,
-				runRand,
-			)
-			if rErr != nil {
-				return rErr
-			}
-
-			simResults <- r
-			return nil
-		})
-	}
-	err := g.Wait()
-	if err != nil {
-		return err
-	}
-
+	sim.RunAllSimulations(
+		expansions,
+		userCollection,
+		completePredicate,
+		runMode.simulationRuns,
+		runMode.randomSeed,
+		context.Background(),
+		simResults,
+	)
 	close(simResults)
 
 	expansionTotals := make(map[*data.Expansion]*expansionSimRunAmounts)
@@ -404,7 +363,7 @@ func runSimulations(
 		}
 		averagesTotal += t.numOpened / runMode.simulationRuns
 	}
-	printer.Printf("  Calculated via a Monte Carlo simulation of %d pack openings\n", total)
+	printer.Printf("  Total pack openings across all simulations: %d\n", total)
 	fmt.Println()
 	for e, a := range expansionAverages {
 		printer.Printf(
@@ -426,7 +385,7 @@ type runOptions struct {
 	randomSeed     uint64
 }
 
-func readRunMode() (*runOptions, error) {
+func readRunOptions() (*runOptions, error) {
 	simRunsPointer := flag.Uint64("r", 10, "number of sim runs")
 	randomSeedPointer := flag.Uint64("s", rand.Uint64(), "sim random seed")
 	flag.Parse()
@@ -435,7 +394,7 @@ func readRunMode() (*runOptions, error) {
 }
 
 func main() {
-	runMode, rErr := readRunMode()
+	runMode, rErr := readRunOptions()
 	if rErr != nil {
 		panic(rErr)
 	}
@@ -449,7 +408,9 @@ func main() {
 	// Gather data from sources
 	results := make(chan *data.Expansion, len(expansionDataSources))
 	g, ctx := errgroup.WithContext(context.Background())
-	for _, s := range expansionDataSources {
+	indexMap := make(map[data.ExpansionId]int)
+	for i, s := range expansionDataSources {
+		indexMap[s.Id()] = i
 		g.Go(func() error {
 			return source.FetchExpansionDetails(ctx, s, results)
 		})
@@ -464,21 +425,8 @@ func main() {
 	for e := range results {
 		expansions = append(expansions, e)
 	}
-	slices.SortFunc(expansions, func(e1 *data.Expansion, e2 *data.Expansion) int {
-		e1Index := -1
-		e2Index := -1
-		for i, s := range expansionDataSources {
-			if s.Id() == e1.Id() {
-				e1Index = i
-			}
-			if s.Id() == e2.Id() {
-				e2Index = i
-			}
-		}
-		if e1Index == -1 || e2Index == -1 {
-			panic("error sorting expansions")
-		}
-		return e1Index - e2Index
+	slices.SortFunc(expansions, func(e1, e2 *data.Expansion) int {
+		return indexMap[e1.Id()] - indexMap[e2.Id()]
 	})
 
 	printBoosterDataAudit(expansions)
@@ -492,7 +440,7 @@ func main() {
 		runMode,
 		expansions,
 		userCollection,
-		func(e *data.Expansion, m []data.ExpansionNumber) bool {
+		func(e *data.Expansion, m []data.ExpansionCardNumber) bool {
 			return len(m) == 0
 		},
 	)
@@ -502,7 +450,7 @@ func main() {
 		runMode,
 		expansions,
 		userCollection,
-		func(e *data.Expansion, m []data.ExpansionNumber) bool {
+		func(e *data.Expansion, m []data.ExpansionCardNumber) bool {
 			for _, id := range m {
 				card, cErr := e.GetCardByNumber(id)
 				if cErr != nil {

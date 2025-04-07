@@ -2,6 +2,7 @@ package collection
 
 import (
 	"fmt"
+	"maps"
 	"ptcgpocket/data"
 	"slices"
 )
@@ -11,7 +12,7 @@ const packPointsPerBooster = 5
 type ExpansionCollection struct {
 	// Has a max of 2,500
 	packPoints         uint16
-	missingCardNumbers []data.ExpansionNumber
+	missingCardNumbers []data.ExpansionCardNumber
 }
 
 func (c *ExpansionCollection) PackPoints() uint16 {
@@ -21,16 +22,16 @@ func (c *ExpansionCollection) PackPoints() uint16 {
 func (c *ExpansionCollection) AcquireCardUsingPackPoints(
 	card *data.Card,
 ) {
-	c.missingCardNumbers = slices.DeleteFunc(c.missingCardNumbers, func(n data.ExpansionNumber) bool {
+	c.missingCardNumbers = slices.DeleteFunc(c.missingCardNumbers, func(n data.ExpansionCardNumber) bool {
 		return n == card.Number()
 	})
 	c.packPoints -= card.Rarity().PackPointsToObtain()
 }
 
 func (c *ExpansionCollection) AddCardsFromBooster(
-	addedNumbers [5]data.ExpansionNumber,
+	addedNumbers [5]data.ExpansionCardNumber,
 ) {
-	c.missingCardNumbers = slices.DeleteFunc(c.missingCardNumbers, func(n data.ExpansionNumber) bool {
+	c.missingCardNumbers = slices.DeleteFunc(c.missingCardNumbers, func(n data.ExpansionCardNumber) bool {
 		for _, a := range addedNumbers {
 			if a == n {
 				return true
@@ -63,15 +64,8 @@ type UserCollection struct {
 	expansions map[data.ExpansionId]*ExpansionCollection
 }
 
-func NewUserCollection(missingCardNumbers map[data.ExpansionId]([]data.ExpansionNumber)) *UserCollection {
-	expansions := make(map[data.ExpansionId]*ExpansionCollection, len(missingCardNumbers))
-	for eId, m := range missingCardNumbers {
-		expansions[eId] = &ExpansionCollection{
-			packPoints:         0,
-			missingCardNumbers: m,
-		}
-	}
-	return &UserCollection{expansions: expansions}
+func NewUserCollection(expansions map[data.ExpansionId]*ExpansionCollection) *UserCollection {
+	return &UserCollection{expansions: maps.Clone(expansions)}
 }
 
 func (c *UserCollection) Clone() *UserCollection {
@@ -96,7 +90,7 @@ func (c *UserCollection) FirstIncompleteExpansionId() (data.ExpansionId, error) 
 	return "", fmt.Errorf("no incomplete expansion")
 }
 
-func (c *UserCollection) MissingForExpansion(expansionId data.ExpansionId) ([]data.ExpansionNumber, bool) {
+func (c *UserCollection) MissingForExpansion(expansionId data.ExpansionId) ([]data.ExpansionCardNumber, bool) {
 	v, e := c.expansions[expansionId]
 	if v == nil {
 		return nil, e
