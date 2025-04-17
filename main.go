@@ -203,21 +203,29 @@ func readUserCollection(expansions []*data.Expansion) (*collection.UserCollectio
 	return collection.ReadFromFilepath(collectionFilepath, expansions)
 }
 
+func printHeading1(heading string) {
+	fmt.Printf("\033[1;32m# %v\n\033[0m", heading)
+}
+
+func printHeading2(heading string) {
+	fmt.Printf("\033[32m  ## %v\n\033[0m", heading)
+}
+
 func printFullCardPosition(
 	label string,
 	amount float64,
 	tallies map[*data.Rarity]float64,
 ) {
-	tallyDescriptions := make([]string, len(tallies))
+	allTallyDescriptions := make([]string, len(tallies))
 	i := 0
 	for _, r := range data.OrderedRarities {
 		t, tFound := tallies[r]
-		if tFound {
-			tallyDescriptions[i] = fmt.Sprintf("%v%.3f", r, t)
+		if tFound && t > 0 {
+			allTallyDescriptions[i] = fmt.Sprintf("%v%.3f", r, t)
 			i++
 		}
 	}
-	tallyDescription := strings.Join(tallyDescriptions, " ")
+	tallyDescriptionRows := slices.Chunk(allTallyDescriptions, 5)
 
 	// Note: Official numbers for Genetic Apex packs don't match up to 100%
 	// for 4th or 5th cards
@@ -229,11 +237,13 @@ func printFullCardPosition(
 	}
 
 	fmt.Printf("%s   %v: %.2f / 100%%\n", colour, label, amount)
-	fmt.Printf("      %v%s\n", tallyDescription, colourReset)
+	for t := range tallyDescriptionRows {
+		fmt.Printf("      %v%s\n", strings.Join(t, " "), colourReset)
+	}
 }
 
 func printBoosterDataAudit(expansions []*data.Expansion) {
-	fmt.Println("# Booster gathered data audit")
+	printHeading1("Booster gathered data audit")
 	for _, e := range expansions {
 		for b := range e.Boosters() {
 
@@ -263,7 +273,7 @@ func printBoosterDataAudit(expansions []*data.Expansion) {
 				totalRareCardOffering += c.RareCardOffering()
 			}
 
-			fmt.Printf(" ## %v - %v\n", e.Name(), b.Name())
+			printHeading2(fmt.Sprintf("%v - %v", e.Name(), b.Name()))
 			printFullCardPosition(
 				"1-3",
 				totalFirstToThirdOffering,
@@ -292,7 +302,7 @@ func printBoosterDataAudit(expansions []*data.Expansion) {
 }
 
 func printCurrentCollectionStats(expansions []*data.Expansion, userCollection *collection.UserCollection) {
-	fmt.Println("# Current collection")
+	printHeading1("Current collection")
 	for _, s := range expansions {
 		missing, sExists := userCollection.MissingForExpansion(s.Id())
 		if !sExists {
@@ -300,7 +310,7 @@ func printCurrentCollectionStats(expansions []*data.Expansion, userCollection *c
 			return
 		}
 
-		fmt.Printf(" ## %v\n", s.Name())
+		printHeading2(s.Name())
 
 		totalStarSecretCardsCollected := 0
 		totalCrownSecretCardsCollected := 0
@@ -359,7 +369,7 @@ func printBoosterProbabilities(expansions []*data.Expansion, userCollection *col
 		return int(1000*b.totalOfferingMissing) - int(1000*a.totalOfferingMissing)
 	})
 
-	fmt.Println("# Booster probabilities")
+	printHeading1("Booster probabilities")
 	for i, b := range allBoosters {
 		fmt.Printf("  %v) %.2f%% %v - %v\n", i+1, b.totalOfferingMissing, b.expansion.Name(), b.booster.Name())
 	}
@@ -379,7 +389,7 @@ func runSimulations(
 	userCollection *collection.UserCollection,
 	completePredicate sim.ExpansionSimCompletePredicate,
 ) error {
-	printer.Printf("# %v - pack opening simulations (%d runs)\n", title, runMode.simulationRuns)
+	printHeading1(printer.Sprintf("%v - pack opening simulations (%d runs)", title, runMode.simulationRuns))
 	fmt.Printf("  Seed: %v\n", runMode.randomSeed)
 	fmt.Println("  The number of booster openings required to complete the collection.")
 
@@ -426,16 +436,13 @@ func runSimulations(
 	printer.Printf("  Total pack openings across all simulations: %d\n", total)
 	fmt.Println()
 	for e, a := range expansionAverages {
-		printer.Printf(
-			"  ## %v\n",
-			e.Name(),
-		)
+		printHeading2(e.Name())
 		printer.Printf("     Packs opened        %v\n", a.numOpened)
 		printer.Printf("     Rare packs          %v\n", a.numRarePacks)
 		printer.Printf("     Cards from pack pts %v\n", a.numCardsObtainedFromPackPoints)
 	}
 	printer.Println()
-	printer.Printf("  ## Total pack openings %d\n", averagesTotal)
+	printHeading2(fmt.Sprintf("Total pack openings %d\n", averagesTotal))
 
 	return nil
 }

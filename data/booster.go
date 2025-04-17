@@ -30,8 +30,8 @@ func NewBoosterOffering(
 
 var NotPresentBoosterOffering = NewBoosterOffering(0, 0, 0, 0)
 
-const RegularPackRate = 0.9995
-const RarePackRate = 1.0 - RegularPackRate
+const regularPackRate = 0.9995
+const rarePackRate = 1.0 - regularPackRate
 
 type BoosterCardOffering struct {
 	card               *Card
@@ -67,10 +67,6 @@ func (b *BoosterCardOffering) RarePackOffering() float64 {
 
 func (b *BoosterCardOffering) RegularPackOffering() float64 {
 	return b.first3CardOffering*3 + b.fourthCardOffering + b.fifthCardOffering
-}
-
-func (b *BoosterCardOffering) OverallPackOffering() float64 {
-	return b.RegularPackOffering()*RegularPackRate + b.RarePackOffering()*RarePackRate
 }
 
 type BoosterInstance struct {
@@ -186,15 +182,6 @@ func NewBooster(
 	}
 }
 
-// func (b *Booster) PrintCards() {
-// 	fmt.Printf("Booster %v\n", b.name)
-// 	for _, c := range b.cards {
-// 		if c.Rarity() == &RarityOneStar {
-// 		fmt.Printf("  ---> %v %v\n", c.Name(), c.Rarity())
-// 		}
-// 	}
-// }
-
 func (b *Booster) Name() string {
 	return b.name
 }
@@ -204,19 +191,21 @@ func (b *Booster) Offerings() iter.Seq[*BoosterCardOffering] {
 }
 
 func (b *Booster) GetInstanceProbabilityForMissing(missing []*Card) float64 {
-	totalOfferingMissing := 0.0
+	totalRegularPackOffering := 0.0
+	totalRarePackOffering := 0.0
 	for o := range b.Offerings() {
 		if slices.Contains(missing, o.Card()) {
-			totalOfferingMissing += o.OverallPackOffering()
+			totalRegularPackOffering += o.RegularPackOffering()
+			totalRarePackOffering += o.RarePackOffering()
 		}
 	}
-	return totalOfferingMissing
+	return totalRegularPackOffering*regularPackRate + totalRarePackOffering*rarePackRate
 }
 
 func (b *Booster) CreateRandomInstance(randomGenerator *rand.Rand) *BoosterInstance {
 	// Rare pack
 	rareNum := randomGenerator.Float64()
-	if rareNum < RarePackRate {
+	if rareNum < rarePackRate {
 		return NewBoosterInstance(
 			true,
 			[5]*Card{
