@@ -4,10 +4,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"math"
 	"math/rand/v2"
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 
 	"ptcgpocket/collection"
 	"ptcgpocket/data"
@@ -182,7 +184,7 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 					&data.RarityThreeStar:    *data.NewBoosterOffering(0.000, 0.222/1, 0.888/1, 2.564/1),
 					&data.RarityOneShiny:     *data.NewBoosterOffering(0.000, 0.714/10, 2.857/10, 25.641/10),
 					&data.RarityTwoShiny:     *data.NewBoosterOffering(0.000, 0.333/4, 1.333/4, 10.256/4),
-					&data.RarityCrown:        *data.NewBoosterOffering(0.000, 0.040, 0.160, 2.564),
+					&data.RarityCrown:        *data.NewBoosterOffering(0.000, 0.040/1, 0.160, 2.564),
 				},
 				111,
 			),
@@ -201,10 +203,46 @@ func readUserCollection(expansions []*data.Expansion) (*collection.UserCollectio
 	return collection.ReadFromFilepath(collectionFilepath, expansions)
 }
 
+func printFullCardPosition(
+	label string,
+	amount float64,
+	tallies map[*data.Rarity]float64,
+) {
+	tallyDescriptions := make([]string, len(tallies))
+	i := 0
+	for _, r := range data.OrderedRarities {
+		t, tFound := tallies[r]
+		if tFound {
+			tallyDescriptions[i] = fmt.Sprintf("%v%.3f", r, t)
+			i++
+		}
+	}
+	tallyDescription := strings.Join(tallyDescriptions, " ")
+
+	// Note: Official numbers for Genetic Apex packs don't match up to 100%
+	// for 4th or 5th cards
+	colour := ""
+	colourReset := ""
+	if math.Abs(amount-100.0) > 0.1 {
+		colour = "\033[0;31m"
+		colourReset = "\033[0m"
+	}
+
+	fmt.Printf("%s   %v: %.2f / 100%%\n", colour, label, amount)
+	fmt.Printf("      %v%s\n", tallyDescription, colourReset)
+}
+
 func printBoosterDataAudit(expansions []*data.Expansion) {
 	fmt.Println("# Booster gathered data audit")
 	for _, e := range expansions {
 		for b := range e.Boosters() {
+
+			offeringTallies := make(map[string]map[*data.Rarity]float64)
+			offeringTallies["1-3"] = make(map[*data.Rarity]float64)
+			offeringTallies["4"] = make(map[*data.Rarity]float64)
+			offeringTallies["5"] = make(map[*data.Rarity]float64)
+			offeringTallies["rare"] = make(map[*data.Rarity]float64)
+
 			totalRegularPackOffering := 0.0
 			totalRarePackOffering := 0.0
 			totalFirstToThirdOffering := 0.0
@@ -212,6 +250,11 @@ func printBoosterDataAudit(expansions []*data.Expansion) {
 			totalFifthOffering := 0.0
 			totalRareCardOffering := 0.0
 			for c := range b.Offerings() {
+				offeringTallies["1-3"][c.Card().Rarity()] += c.First3CardOffering()
+				offeringTallies["4"][c.Card().Rarity()] += c.FourthCardOffering()
+				offeringTallies["5"][c.Card().Rarity()] += c.FifthCardOffering()
+				offeringTallies["rare"][c.Card().Rarity()] += c.RareCardOffering()
+
 				totalRegularPackOffering += c.RegularPackOffering()
 				totalRarePackOffering += c.RegularPackOffering()
 				totalFirstToThirdOffering += c.First3CardOffering()
@@ -219,12 +262,29 @@ func printBoosterDataAudit(expansions []*data.Expansion) {
 				totalFifthOffering += c.FifthCardOffering()
 				totalRareCardOffering += c.RareCardOffering()
 			}
+
 			fmt.Printf(" ## %v - %v\n", e.Name(), b.Name())
-			fmt.Printf("   1-3: %.2f / 100%%\n", totalFirstToThirdOffering)
-			fmt.Printf("   4: %.2f / 100%%\n", totalFourthOffering)
-			fmt.Printf("   5: %.2f / 100%%\n", totalFifthOffering)
+			printFullCardPosition(
+				"1-3",
+				totalFirstToThirdOffering,
+				offeringTallies["1-3"],
+			)
+			printFullCardPosition(
+				"4",
+				totalFourthOffering,
+				offeringTallies["4"],
+			)
+			printFullCardPosition(
+				"5",
+				totalFifthOffering,
+				offeringTallies["5"],
+			)
 			fmt.Printf("   total regular: %.2f / 500%%\n", totalRegularPackOffering)
-			fmt.Printf("   rare: %.2f / 500%%\n", totalRareCardOffering)
+			printFullCardPosition(
+				"rare",
+				totalRareCardOffering,
+				offeringTallies["rare"],
+			)
 			fmt.Printf("   total rare: %.2f / 500%%\n", totalRarePackOffering)
 			fmt.Println()
 		}

@@ -29,6 +29,19 @@ var (
 	RarityCrown        = Rarity{9, true, strings.Repeat(crownChar, 1), 2_500}
 )
 
+var OrderedRarities = []*Rarity{
+	&RarityOneDiamond,
+	&RarityTwoDiamond,
+	&RarityThreeDiamond,
+	&RarityFourDiamond,
+	&RarityOneStar,
+	&RarityTwoStar,
+	&RarityThreeStar,
+	&RarityOneShiny,
+	&RarityTwoShiny,
+	&RarityCrown,
+}
+
 func (r *Rarity) PackPointsToObtain() uint16 {
 	return r.packPointsToObtain
 }
@@ -47,6 +60,10 @@ func (r *Rarity) IsShiny() bool {
 
 func (r *Rarity) IsSecret() bool {
 	return r.isSecret
+}
+
+func (r *Rarity) String() string {
+	return r.value
 }
 
 type BaseCard struct {

@@ -186,6 +186,15 @@ func NewBooster(
 	}
 }
 
+// func (b *Booster) PrintCards() {
+// 	fmt.Printf("Booster %v\n", b.name)
+// 	for _, c := range b.cards {
+// 		if c.Rarity() == &RarityOneStar {
+// 		fmt.Printf("  ---> %v %v\n", c.Name(), c.Rarity())
+// 		}
+// 	}
+// }
+
 func (b *Booster) Name() string {
 	return b.name
 }
@@ -207,7 +216,6 @@ func (b *Booster) GetInstanceProbabilityForMissing(missing []*Card) float64 {
 func (b *Booster) CreateRandomInstance(randomGenerator *rand.Rand) *BoosterInstance {
 	// Rare pack
 	rareNum := randomGenerator.Float64()
-	// fmt.Printf("%v\n", rareNum)
 	if rareNum < RarePackRate {
 		return NewBoosterInstance(
 			true,
