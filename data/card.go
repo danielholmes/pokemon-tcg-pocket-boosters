@@ -11,35 +11,22 @@ type Rarity struct {
 	packPointsToObtain uint16
 }
 
-const diamondChar = "♢"
-const starChar = "☆"
-const shinyChar = "✵"
-const crownChar = "♕"
+const RarityDiamondChar = '♢'
+const RarityStarChar = '☆'
+const RarityShinyChar = '✵'
+const RarityCrownChar = '♕'
 
-var (
-	RarityOneDiamond   = Rarity{0, false, strings.Repeat(diamondChar, 1), 35}
-	RarityTwoDiamond   = Rarity{1, false, strings.Repeat(diamondChar, 2), 70}
-	RarityThreeDiamond = Rarity{2, false, strings.Repeat(diamondChar, 3), 150}
-	RarityFourDiamond  = Rarity{3, false, strings.Repeat(diamondChar, 4), 500}
-	RarityOneStar      = Rarity{4, true, strings.Repeat(starChar, 1), 400}
-	RarityTwoStar      = Rarity{5, true, strings.Repeat(starChar, 2), 1_250}
-	RarityThreeStar    = Rarity{6, true, strings.Repeat(starChar, 3), 1_500}
-	RarityOneShiny     = Rarity{7, true, strings.Repeat(shinyChar, 1), 1_000}
-	RarityTwoShiny     = Rarity{8, true, strings.Repeat(shinyChar, 2), 1_350}
-	RarityCrown        = Rarity{9, true, strings.Repeat(crownChar, 1), 2_500}
-)
-
-var OrderedRarities = []*Rarity{
-	&RarityOneDiamond,
-	&RarityTwoDiamond,
-	&RarityThreeDiamond,
-	&RarityFourDiamond,
-	&RarityOneStar,
-	&RarityTwoStar,
-	&RarityThreeStar,
-	&RarityOneShiny,
-	&RarityTwoShiny,
-	&RarityCrown,
+func newRarity(order uint8, isSecret bool, symbol rune, symbolCount uint8, packPointsToObtain uint16) *Rarity {
+	value := ""
+	for range symbolCount {
+		value += string(symbol)
+	}
+	return &Rarity{
+		order:              order,
+		isSecret:           isSecret,
+		value:              value,
+		packPointsToObtain: packPointsToObtain,
+	}
 }
 
 func (r *Rarity) PackPointsToObtain() uint16 {
@@ -47,15 +34,15 @@ func (r *Rarity) PackPointsToObtain() uint16 {
 }
 
 func (r *Rarity) IsStar() bool {
-	return strings.Contains(r.value, starChar)
+	return strings.ContainsRune(r.value, RarityStarChar)
 }
 
 func (r *Rarity) IsCrown() bool {
-	return strings.Contains(r.value, crownChar)
+	return strings.ContainsRune(r.value, RarityCrownChar)
 }
 
 func (r *Rarity) IsShiny() bool {
-	return strings.Contains(r.value, shinyChar)
+	return strings.ContainsRune(r.value, RarityShinyChar)
 }
 
 func (r *Rarity) IsSecret() bool {
@@ -64,6 +51,32 @@ func (r *Rarity) IsSecret() bool {
 
 func (r *Rarity) String() string {
 	return r.value
+}
+
+var (
+	RarityOneDiamond   = newRarity(0, false, RarityDiamondChar, 1, 35)
+	RarityTwoDiamond   = newRarity(1, false, RarityDiamondChar, 2, 70)
+	RarityThreeDiamond = newRarity(2, false, RarityDiamondChar, 3, 150)
+	RarityFourDiamond  = newRarity(3, false, RarityDiamondChar, 4, 500)
+	RarityOneStar      = newRarity(4, true, RarityStarChar, 1, 400)
+	RarityTwoStar      = newRarity(5, true, RarityStarChar, 2, 1_250)
+	RarityThreeStar    = newRarity(6, true, RarityStarChar, 3, 1_500)
+	RarityOneShiny     = newRarity(7, true, RarityShinyChar, 1, 1_000)
+	RarityTwoShiny     = newRarity(8, true, RarityShinyChar, 2, 1_350)
+	RarityCrown        = newRarity(9, true, RarityCrownChar, 1, 2_500)
+)
+
+var OrderedRarities = []*Rarity{
+	RarityOneDiamond,
+	RarityTwoDiamond,
+	RarityThreeDiamond,
+	RarityFourDiamond,
+	RarityOneStar,
+	RarityTwoStar,
+	RarityThreeStar,
+	RarityOneShiny,
+	RarityTwoShiny,
+	RarityCrown,
 }
 
 type BaseCard struct {

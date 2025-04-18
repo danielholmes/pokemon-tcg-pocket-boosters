@@ -12,11 +12,11 @@ func TestNewBoosterOfferings(t *testing.T) {
 					health: 60,
 				},
 				number: 12,
-				rarity: &RarityOneDiamond,
+				rarity: RarityOneDiamond,
 			},
 		},
 		OfferingRatesTable{
-			&RarityOneDiamond: {
+			RarityOneDiamond: {
 				first3CardOffering: 0.5,
 				fourthCardOffering: 0.4,
 				fifthCardOffering:  0.6,

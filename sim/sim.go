@@ -6,8 +6,8 @@ import (
 	"iter"
 	"maps"
 	"math/rand/v2"
-	"ptcgpocket/collection"
 	"ptcgpocket/data"
+	"ptcgpocket/userdata"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -69,7 +69,7 @@ type ExpansionSimCompletePredicate func(*data.Expansion, []*data.Card) bool
 
 func RunSim(
 	expansions []*data.Expansion,
-	userCollection *collection.UserCollection,
+	userCollection *userdata.UserCollection,
 	expansionCompletePredicate ExpansionSimCompletePredicate,
 	randomGenerator *rand.Rand,
 ) (*SimRun, error) {
@@ -135,7 +135,7 @@ func RunSim(
 
 func RunAllSimulations(
 	expansions []*data.Expansion,
-	userCollection *collection.UserCollection,
+	userCollection *userdata.UserCollection,
 	completePredicate ExpansionSimCompletePredicate,
 	runs uint64,
 	randomSeed uint64,

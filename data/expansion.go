@@ -60,6 +60,15 @@ func (e *Expansion) Name() string {
 	return e.name
 }
 
+func (e *Expansion) HasShiny() bool {
+	for c := range e.cards {
+		if c.Rarity().IsShiny() {
+			return true
+		}
+	}
+	return false
+}
+
 func (e *Expansion) Cards() iter.Seq[*Card] {
 	return e.cards
 }

@@ -1,4 +1,4 @@
-package collection
+package userdata
 
 import (
 	"fmt"
@@ -12,8 +12,7 @@ const packPointsPerBooster = 5
 
 type ExpansionCollection struct {
 	// Has a max of 2,500
-	packPoints uint16
-	// missingCardNumbers []data.ExpansionCardNumber
+	packPoints   uint16
 	missingCards []*data.Card
 }
 

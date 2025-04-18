@@ -204,16 +204,16 @@ func fetchBoosterDetails(booster *BoosterSerebiiSource, results chan<- *data.Boo
 		comps := strings.Split(srcAttr.Val, "/")
 		imageName := strings.Split(comps[len(comps)-1], ".")[0]
 		imageNameRarities := map[string]*data.Rarity{
-			"diamond1": &data.RarityOneDiamond,
-			"diamond2": &data.RarityTwoDiamond,
-			"diamond3": &data.RarityThreeDiamond,
-			"diamond4": &data.RarityFourDiamond,
-			"star1":    &data.RarityOneStar,
-			"star2":    &data.RarityTwoStar,
-			"star3":    &data.RarityThreeStar,
-			"shiny1":   &data.RarityOneShiny,
-			"shiny2":   &data.RarityTwoShiny,
-			"crown":    &data.RarityCrown,
+			"diamond1": data.RarityOneDiamond,
+			"diamond2": data.RarityTwoDiamond,
+			"diamond3": data.RarityThreeDiamond,
+			"diamond4": data.RarityFourDiamond,
+			"star1":    data.RarityOneStar,
+			"star2":    data.RarityTwoStar,
+			"star3":    data.RarityThreeStar,
+			"shiny1":   data.RarityOneShiny,
+			"shiny2":   data.RarityTwoShiny,
+			"crown":    data.RarityCrown,
 		}
 		var rarity *data.Rarity = imageNameRarities[imageName]
 		if rarity == nil {

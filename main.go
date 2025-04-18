@@ -11,10 +11,10 @@ import (
 	"slices"
 	"strings"
 
-	"ptcgpocket/collection"
 	"ptcgpocket/data"
 	"ptcgpocket/sim"
 	"ptcgpocket/source"
+	"ptcgpocket/userdata"
 
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/text/language"
@@ -32,16 +32,16 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 				"Pikachu",
 				"https://www.serebii.net/tcgpocket/geneticapex/pikachu.shtml",
 				data.OfferingRatesTable{
-					&data.RarityOneDiamond:   *data.NewBoosterOffering(100.0/50.0, 0, 0, 0),
-					&data.RarityTwoDiamond:   *data.NewBoosterOffering(0, 90.0/35.0, 60.0/35.0, 0),
-					&data.RarityThreeDiamond: *data.NewBoosterOffering(0, 5.0/14.0, 20.0/14.0, 0),
-					&data.RarityFourDiamond:  *data.NewBoosterOffering(0, 1.666/5.0, 6.664/5.0, 0),
-					&data.RarityOneShiny:     *data.NotPresentBoosterOffering,
-					&data.RarityTwoShiny:     *data.NotPresentBoosterOffering,
-					&data.RarityOneStar:      *data.NewBoosterOffering(0, 2.572/8.0, 10.288/8.0, 40.0/8.0),
-					&data.RarityTwoStar:      *data.NewBoosterOffering(0, 0.50/10.0, 0.200/10.0, 50.0/10.0),
-					&data.RarityThreeStar:    *data.NewBoosterOffering(0, 0.222/1.0, 0.888/1.0, 5.0/1.0),
-					&data.RarityCrown:        *data.NewBoosterOffering(0, 0.4/3.0, 0.16/3.0, 5.0/1.0),
+					data.RarityOneDiamond:   *data.NewBoosterOffering(100.0/50.0, 0, 0, 0),
+					data.RarityTwoDiamond:   *data.NewBoosterOffering(0, 90.0/35.0, 60.0/35.0, 0),
+					data.RarityThreeDiamond: *data.NewBoosterOffering(0, 5.0/14.0, 20.0/14.0, 0),
+					data.RarityFourDiamond:  *data.NewBoosterOffering(0, 1.666/5.0, 6.664/5.0, 0),
+					data.RarityOneShiny:     *data.NotPresentBoosterOffering,
+					data.RarityTwoShiny:     *data.NotPresentBoosterOffering,
+					data.RarityOneStar:      *data.NewBoosterOffering(0, 2.572/8.0, 10.288/8.0, 40.0/8.0),
+					data.RarityTwoStar:      *data.NewBoosterOffering(0, 0.50/10.0, 0.200/10.0, 50.0/10.0),
+					data.RarityThreeStar:    *data.NewBoosterOffering(0, 0.222/1.0, 0.888/1.0, 5.0/1.0),
+					data.RarityCrown:        *data.NewBoosterOffering(0, 0.4/3.0, 0.16/3.0, 5.0/1.0),
 				},
 				285,
 			),
@@ -49,16 +49,16 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 				"MewTwo",
 				"https://www.serebii.net/tcgpocket/geneticapex/mewtwo.shtml",
 				data.OfferingRatesTable{
-					&data.RarityOneDiamond:   *data.NewBoosterOffering(100.0/50.0, 0, 0, 0),
-					&data.RarityTwoDiamond:   *data.NewBoosterOffering(0, 90.0/35.0, 60.0/35.0, 0),
-					&data.RarityThreeDiamond: *data.NewBoosterOffering(0, 5.0/14.0, 20.0/14.0, 0),
-					&data.RarityFourDiamond:  *data.NewBoosterOffering(0, 1.666/5.0, 6.664/5.0, 0),
-					&data.RarityOneShiny:     *data.NotPresentBoosterOffering,
-					&data.RarityTwoShiny:     *data.NotPresentBoosterOffering,
-					&data.RarityOneStar:      *data.NewBoosterOffering(0, 2.572/8.0, 10.288/8.0, 42.105/8.0),
-					&data.RarityTwoStar:      *data.NewBoosterOffering(0, 0.50/10.0, 0.200/10.0, 47.368/9.0),
-					&data.RarityThreeStar:    *data.NewBoosterOffering(0, 0.222/1.0, 0.888/1.0, 5.263/1.0),
-					&data.RarityCrown:        *data.NewBoosterOffering(0, 0.4/3.0, 0.16/3.0, 5.263/1.0),
+					data.RarityOneDiamond:   *data.NewBoosterOffering(100.0/50.0, 0, 0, 0),
+					data.RarityTwoDiamond:   *data.NewBoosterOffering(0, 90.0/35.0, 60.0/35.0, 0),
+					data.RarityThreeDiamond: *data.NewBoosterOffering(0, 5.0/14.0, 20.0/14.0, 0),
+					data.RarityFourDiamond:  *data.NewBoosterOffering(0, 1.666/5.0, 6.664/5.0, 0),
+					data.RarityOneShiny:     *data.NotPresentBoosterOffering,
+					data.RarityTwoShiny:     *data.NotPresentBoosterOffering,
+					data.RarityOneStar:      *data.NewBoosterOffering(0, 2.572/8.0, 10.288/8.0, 42.105/8.0),
+					data.RarityTwoStar:      *data.NewBoosterOffering(0, 0.50/10.0, 0.200/10.0, 47.368/9.0),
+					data.RarityThreeStar:    *data.NewBoosterOffering(0, 0.222/1.0, 0.888/1.0, 5.263/1.0),
+					data.RarityCrown:        *data.NewBoosterOffering(0, 0.4/3.0, 0.16/3.0, 5.263/1.0),
 				},
 				286,
 			),
@@ -66,16 +66,16 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 				"Charizard",
 				"https://www.serebii.net/tcgpocket/geneticapex/charizard.shtml",
 				data.OfferingRatesTable{
-					&data.RarityOneDiamond:   *data.NewBoosterOffering(100.0/50.0, 0, 0, 0),
-					&data.RarityTwoDiamond:   *data.NewBoosterOffering(0, 90.0/35.0, 60.0/35.0, 0),
-					&data.RarityThreeDiamond: *data.NewBoosterOffering(0, 5.0/14.0, 20.0/14.0, 0),
-					&data.RarityFourDiamond:  *data.NewBoosterOffering(0, 1.666/5.0, 6.664/5.0, 0),
-					&data.RarityOneShiny:     *data.NotPresentBoosterOffering,
-					&data.RarityTwoShiny:     *data.NotPresentBoosterOffering,
-					&data.RarityOneStar:      *data.NewBoosterOffering(0, 2.572/8.0, 10.288/8.0, 40.0/8.0),
-					&data.RarityTwoStar:      *data.NewBoosterOffering(0, 0.50/10.0, 0.200/10.0, 50.0/10.0),
-					&data.RarityThreeStar:    *data.NewBoosterOffering(0, 0.222/1.0, 0.888/1.0, 5.0/1.0),
-					&data.RarityCrown:        *data.NewBoosterOffering(0, 0.4/3.0, 0.16/3.0, 5.0/1.0),
+					data.RarityOneDiamond:   *data.NewBoosterOffering(100.0/50.0, 0, 0, 0),
+					data.RarityTwoDiamond:   *data.NewBoosterOffering(0, 90.0/35.0, 60.0/35.0, 0),
+					data.RarityThreeDiamond: *data.NewBoosterOffering(0, 5.0/14.0, 20.0/14.0, 0),
+					data.RarityFourDiamond:  *data.NewBoosterOffering(0, 1.666/5.0, 6.664/5.0, 0),
+					data.RarityOneShiny:     *data.NotPresentBoosterOffering,
+					data.RarityTwoShiny:     *data.NotPresentBoosterOffering,
+					data.RarityOneStar:      *data.NewBoosterOffering(0, 2.572/8.0, 10.288/8.0, 40.0/8.0),
+					data.RarityTwoStar:      *data.NewBoosterOffering(0, 0.50/10.0, 0.200/10.0, 50.0/10.0),
+					data.RarityThreeStar:    *data.NewBoosterOffering(0, 0.222/1.0, 0.888/1.0, 5.0/1.0),
+					data.RarityCrown:        *data.NewBoosterOffering(0, 0.4/3.0, 0.16/3.0, 5.0/1.0),
 				},
 				284,
 			),
@@ -89,16 +89,16 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 				"Mew",
 				"https://www.serebii.net/tcgpocket/mythicalisland/mew.shtml",
 				data.OfferingRatesTable{
-					&data.RarityOneDiamond:   *data.NewBoosterOffering(100.0/32.0, 0, 0, 0),
-					&data.RarityTwoDiamond:   *data.NewBoosterOffering(0, 90.0/23.0, 60.0/23.0, 0),
-					&data.RarityThreeDiamond: *data.NewBoosterOffering(0, 5.0/8.0, 20.0/8.0, 0),
-					&data.RarityFourDiamond:  *data.NewBoosterOffering(0, 1.666/5, 6.664/5.0, 0),
-					&data.RarityOneShiny:     *data.NotPresentBoosterOffering,
-					&data.RarityTwoShiny:     *data.NotPresentBoosterOffering,
-					&data.RarityOneStar:      *data.NewBoosterOffering(0, 2.572/6.0, 10.288/6.0, 33.333/6.0),
-					&data.RarityTwoStar:      *data.NewBoosterOffering(0, 0.500/10.0, 2.000/10.0, 55.555/10.0),
-					&data.RarityThreeStar:    *data.NewBoosterOffering(0, 0.222/1.0, 0.888/1.0, 5.555/1.0),
-					&data.RarityCrown:        *data.NewBoosterOffering(0, 0.040/1.0, 0.160/1.0, 5.555/1.0),
+					data.RarityOneDiamond:   *data.NewBoosterOffering(100.0/32.0, 0, 0, 0),
+					data.RarityTwoDiamond:   *data.NewBoosterOffering(0, 90.0/23.0, 60.0/23.0, 0),
+					data.RarityThreeDiamond: *data.NewBoosterOffering(0, 5.0/8.0, 20.0/8.0, 0),
+					data.RarityFourDiamond:  *data.NewBoosterOffering(0, 1.666/5, 6.664/5.0, 0),
+					data.RarityOneShiny:     *data.NotPresentBoosterOffering,
+					data.RarityTwoShiny:     *data.NotPresentBoosterOffering,
+					data.RarityOneStar:      *data.NewBoosterOffering(0, 2.572/6.0, 10.288/6.0, 33.333/6.0),
+					data.RarityTwoStar:      *data.NewBoosterOffering(0, 0.500/10.0, 2.000/10.0, 55.555/10.0),
+					data.RarityThreeStar:    *data.NewBoosterOffering(0, 0.222/1.0, 0.888/1.0, 5.555/1.0),
+					data.RarityCrown:        *data.NewBoosterOffering(0, 0.040/1.0, 0.160/1.0, 5.555/1.0),
 				},
 				86,
 			),
@@ -112,16 +112,16 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 				"Dialga",
 				"https://www.serebii.net/tcgpocket/space-timesmackdown/dialga.shtml",
 				data.OfferingRatesTable{
-					&data.RarityOneDiamond:   *data.NewBoosterOffering(100.0/46.0, 0, 0, 0),
-					&data.RarityTwoDiamond:   *data.NewBoosterOffering(0, 90.0/34.0, 60.0/34.0, 0),
-					&data.RarityThreeDiamond: *data.NewBoosterOffering(0, 5.0/14.0, 20.0/14.0, 0),
-					&data.RarityFourDiamond:  *data.NewBoosterOffering(0, 1.666/5.0, 6.664/5.0, 0),
-					&data.RarityOneShiny:     *data.NotPresentBoosterOffering,
-					&data.RarityTwoShiny:     *data.NotPresentBoosterOffering,
-					&data.RarityOneStar:      *data.NewBoosterOffering(0, 2.572/12.0, 10.288/12.0, 46.153/12.0),
-					&data.RarityTwoStar:      *data.NewBoosterOffering(0, 0.5/12.0, 2.0/12.0, 46.153/12.0),
-					&data.RarityThreeStar:    *data.NewBoosterOffering(0, 0.222/1.0, 0.888/1.0, 3.846/1.0),
-					&data.RarityCrown:        *data.NewBoosterOffering(0, 0.040/2.0, 0.160/2.0, 3.846/1.0),
+					data.RarityOneDiamond:   *data.NewBoosterOffering(100.0/46.0, 0, 0, 0),
+					data.RarityTwoDiamond:   *data.NewBoosterOffering(0, 90.0/34.0, 60.0/34.0, 0),
+					data.RarityThreeDiamond: *data.NewBoosterOffering(0, 5.0/14.0, 20.0/14.0, 0),
+					data.RarityFourDiamond:  *data.NewBoosterOffering(0, 1.666/5.0, 6.664/5.0, 0),
+					data.RarityOneShiny:     *data.NotPresentBoosterOffering,
+					data.RarityTwoShiny:     *data.NotPresentBoosterOffering,
+					data.RarityOneStar:      *data.NewBoosterOffering(0, 2.572/12.0, 10.288/12.0, 46.153/12.0),
+					data.RarityTwoStar:      *data.NewBoosterOffering(0, 0.5/12.0, 2.0/12.0, 46.153/12.0),
+					data.RarityThreeStar:    *data.NewBoosterOffering(0, 0.222/1.0, 0.888/1.0, 3.846/1.0),
+					data.RarityCrown:        *data.NewBoosterOffering(0, 0.040/2.0, 0.160/2.0, 3.846/1.0),
 				},
 				207,
 			),
@@ -129,16 +129,16 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 				"Palkia",
 				"https://www.serebii.net/tcgpocket/space-timesmackdown/palkia.shtml",
 				data.OfferingRatesTable{
-					&data.RarityOneDiamond:   *data.NewBoosterOffering(100.0/44.0, 0, 0, 0),
-					&data.RarityTwoDiamond:   *data.NewBoosterOffering(0, 90.0/36.0, 60.0/36.0, 0),
-					&data.RarityThreeDiamond: *data.NewBoosterOffering(0, 5.0/14.0, 20.0/14.0, 0),
-					&data.RarityFourDiamond:  *data.NewBoosterOffering(0, 1.666/5.0, 6.664/5.0, 0),
-					&data.RarityOneShiny:     *data.NotPresentBoosterOffering,
-					&data.RarityTwoShiny:     *data.NotPresentBoosterOffering,
-					&data.RarityOneStar:      *data.NewBoosterOffering(0, 2.572/12.0, 10.288/12.0, 46.153/12.0),
-					&data.RarityTwoStar:      *data.NewBoosterOffering(0, 0.5/12.0, 2.0/12.0, 46.153/12.0),
-					&data.RarityThreeStar:    *data.NewBoosterOffering(0, 0.222/1.0, 0.888/1.0, 3.846/1.0),
-					&data.RarityCrown:        *data.NewBoosterOffering(0, 0.040/2.0, 0.160/2.0, 3.846/1.0),
+					data.RarityOneDiamond:   *data.NewBoosterOffering(100.0/44.0, 0, 0, 0),
+					data.RarityTwoDiamond:   *data.NewBoosterOffering(0, 90.0/36.0, 60.0/36.0, 0),
+					data.RarityThreeDiamond: *data.NewBoosterOffering(0, 5.0/14.0, 20.0/14.0, 0),
+					data.RarityFourDiamond:  *data.NewBoosterOffering(0, 1.666/5.0, 6.664/5.0, 0),
+					data.RarityOneShiny:     *data.NotPresentBoosterOffering,
+					data.RarityTwoShiny:     *data.NotPresentBoosterOffering,
+					data.RarityOneStar:      *data.NewBoosterOffering(0, 2.572/12.0, 10.288/12.0, 46.153/12.0),
+					data.RarityTwoStar:      *data.NewBoosterOffering(0, 0.5/12.0, 2.0/12.0, 46.153/12.0),
+					data.RarityThreeStar:    *data.NewBoosterOffering(0, 0.222/1.0, 0.888/1.0, 3.846/1.0),
+					data.RarityCrown:        *data.NewBoosterOffering(0, 0.040/2.0, 0.160/2.0, 3.846/1.0),
 				},
 				206,
 			),
@@ -152,16 +152,16 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 				"Arceus",
 				"https://www.serebii.net/tcgpocket/triumphantlight/arceus.shtml",
 				data.OfferingRatesTable{
-					&data.RarityOneDiamond:   *data.NewBoosterOffering(100.0/31.0, 0, 0, 0),
-					&data.RarityTwoDiamond:   *data.NewBoosterOffering(0.000, 90.0/26.0, 60.0/26.0, 0.000),
-					&data.RarityThreeDiamond: *data.NewBoosterOffering(0.000, 5.0/13.0, 20.0/13.0, 0.000),
-					&data.RarityFourDiamond:  *data.NewBoosterOffering(0.000, 1.666/5.0, 6.664/5.0, 0.000),
-					&data.RarityOneShiny:     *data.NotPresentBoosterOffering,
-					&data.RarityTwoShiny:     *data.NotPresentBoosterOffering,
-					&data.RarityOneStar:      *data.NewBoosterOffering(0.000, 2.572/6.0, 10.288/6.0, 28.571/6.0),
-					&data.RarityTwoStar:      *data.NewBoosterOffering(0.000, 0.5/13.0, 2.0/13.0, 61.904/13.0),
-					&data.RarityThreeStar:    *data.NewBoosterOffering(0.000, 0.222/1.0, 0.888/1.0, 4.761/1.0),
-					&data.RarityCrown:        *data.NewBoosterOffering(0.000, 0.040/1.0, 0.160/1.0, 4.761/1.0),
+					data.RarityOneDiamond:   *data.NewBoosterOffering(100.0/31.0, 0, 0, 0),
+					data.RarityTwoDiamond:   *data.NewBoosterOffering(0.000, 90.0/26.0, 60.0/26.0, 0.000),
+					data.RarityThreeDiamond: *data.NewBoosterOffering(0.000, 5.0/13.0, 20.0/13.0, 0.000),
+					data.RarityFourDiamond:  *data.NewBoosterOffering(0.000, 1.666/5.0, 6.664/5.0, 0.000),
+					data.RarityOneShiny:     *data.NotPresentBoosterOffering,
+					data.RarityTwoShiny:     *data.NotPresentBoosterOffering,
+					data.RarityOneStar:      *data.NewBoosterOffering(0.000, 2.572/6.0, 10.288/6.0, 28.571/6.0),
+					data.RarityTwoStar:      *data.NewBoosterOffering(0.000, 0.5/13.0, 2.0/13.0, 61.904/13.0),
+					data.RarityThreeStar:    *data.NewBoosterOffering(0.000, 0.222/1.0, 0.888/1.0, 4.761/1.0),
+					data.RarityCrown:        *data.NewBoosterOffering(0.000, 0.040/1.0, 0.160/1.0, 4.761/1.0),
 				},
 				96,
 			),
@@ -175,16 +175,16 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 				"Booster",
 				"https://www.serebii.net/tcgpocket/shiningrevelry/booster.shtml",
 				data.OfferingRatesTable{
-					&data.RarityOneDiamond:   *data.NewBoosterOffering(100.0/32.0, 0, 0, 0),
-					&data.RarityTwoDiamond:   *data.NewBoosterOffering(0.000, 89.000/22, 56.000/22, 0.000),
-					&data.RarityThreeDiamond: *data.NewBoosterOffering(0.000, 4.952/9, 19.810/9, 0.000),
-					&data.RarityFourDiamond:  *data.NewBoosterOffering(0.000, 1.666/9, 6.664/9, 0.000),
-					&data.RarityOneStar:      *data.NewBoosterOffering(0.000, 2.572/6, 10.288/6, 15.384/6),
-					&data.RarityTwoStar:      *data.NewBoosterOffering(0.000, 0.500/17, 2.000/17, 43.589/17),
-					&data.RarityThreeStar:    *data.NewBoosterOffering(0.000, 0.222/1, 0.888/1, 2.564/1),
-					&data.RarityOneShiny:     *data.NewBoosterOffering(0.000, 0.714/10, 2.857/10, 25.641/10),
-					&data.RarityTwoShiny:     *data.NewBoosterOffering(0.000, 0.333/4, 1.333/4, 10.256/4),
-					&data.RarityCrown:        *data.NewBoosterOffering(0.000, 0.040/1, 0.160, 2.564),
+					data.RarityOneDiamond:   *data.NewBoosterOffering(100.0/32.0, 0, 0, 0),
+					data.RarityTwoDiamond:   *data.NewBoosterOffering(0.000, 89.000/22, 56.000/22, 0.000),
+					data.RarityThreeDiamond: *data.NewBoosterOffering(0.000, 4.952/9, 19.810/9, 0.000),
+					data.RarityFourDiamond:  *data.NewBoosterOffering(0.000, 1.666/9, 6.664/9, 0.000),
+					data.RarityOneStar:      *data.NewBoosterOffering(0.000, 2.572/6, 10.288/6, 15.384/6),
+					data.RarityTwoStar:      *data.NewBoosterOffering(0.000, 0.500/17, 2.000/17, 43.589/17),
+					data.RarityThreeStar:    *data.NewBoosterOffering(0.000, 0.222/1, 0.888/1, 2.564/1),
+					data.RarityOneShiny:     *data.NewBoosterOffering(0.000, 0.714/10, 2.857/10, 25.641/10),
+					data.RarityTwoShiny:     *data.NewBoosterOffering(0.000, 0.333/4, 1.333/4, 10.256/4),
+					data.RarityCrown:        *data.NewBoosterOffering(0.000, 0.040/1, 0.160, 2.564),
 				},
 				111,
 			),
@@ -192,15 +192,15 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 	),
 }
 
-func readUserCollection(expansions []*data.Expansion) (*collection.UserCollection, error) {
+func readUserData(expansions []*data.Expansion) (*userdata.UserData, error) {
 	dir, dErr := os.Getwd()
 	if dErr != nil {
 		return nil, dErr
 	}
 
-	collectionFilepath := filepath.Join(dir, "collection.json")
+	dataFilepath := filepath.Join(dir, "data.json")
 
-	return collection.ReadFromFilepath(collectionFilepath, expansions)
+	return userdata.ReadFromFilepath(dataFilepath, expansions)
 }
 
 func printHeading1(heading string) {
@@ -301,22 +301,22 @@ func printBoosterDataAudit(expansions []*data.Expansion) {
 	}
 }
 
-func printCurrentCollectionStats(expansions []*data.Expansion, userCollection *collection.UserCollection) {
+func printCurrentCollectionStats(expansions []*data.Expansion, userCollection *userdata.UserCollection) {
 	printHeading1("Current collection")
-	for _, s := range expansions {
-		missing, sExists := userCollection.MissingForExpansion(s.Id())
+	for _, e := range expansions {
+		missing, sExists := userCollection.MissingForExpansion(e.Id())
 		if !sExists {
-			fmt.Printf("Set id %v not found\n", s.Id())
+			fmt.Printf("Set id %v not found\n", e.Id())
 			return
 		}
 
-		printHeading2(s.Name())
+		printHeading2(e.Name())
 
-		totalStarSecretCardsCollected := 0
-		totalCrownSecretCardsCollected := 0
-		totalNonSecretCardsCollected := 0
-		totalShinySecretCardsCollected := 0
-		for c := range s.Cards() {
+		var totalStarSecretCardsCollected uint64
+		var totalCrownSecretCardsCollected uint64
+		var totalNonSecretCardsCollected uint64
+		var totalShinySecretCardsCollected uint64
+		for c := range e.Cards() {
 			if !slices.Contains(missing, c) {
 				if c.Rarity().IsStar() {
 					totalStarSecretCardsCollected += 1
@@ -333,25 +333,40 @@ func printCurrentCollectionStats(expansions []*data.Expansion, userCollection *c
 			totalShinySecretCardsCollected +
 			totalCrownSecretCardsCollected +
 			totalNonSecretCardsCollected
+
+		rarityTypes := map[rune]uint64{
+			data.RarityStarChar:  totalCrownSecretCardsCollected,
+			data.RarityCrownChar: totalCrownSecretCardsCollected,
+		}
+		if e.HasShiny() {
+			rarityTypes[data.RarityShinyChar] = totalShinySecretCardsCollected
+		}
+		var rarityCounts []string
+		for r, t := range rarityTypes {
+			rarityCounts = append(rarityCounts, fmt.Sprintf("%v: %v", r, t))
+		}
+
 		fmt.Printf(
-			"    %v / %v (%v%%) %v★ %v✵ %v♕ Inc. secret %v / %v (%v%%)\n",
+			"    %v / %v (%v%%) %v Inc. secret %v / %v (%v%%)\n",
 			totalNonSecretCardsCollected,
-			s.TotalNonSecretCards(),
-			100*totalNonSecretCardsCollected/int(s.TotalNonSecretCards()),
-			totalStarSecretCardsCollected,
-			totalShinySecretCardsCollected,
-			totalCrownSecretCardsCollected,
+			e.TotalNonSecretCards(),
+			100*totalNonSecretCardsCollected/uint64(e.TotalNonSecretCards()),
+			strings.Join(rarityCounts, " "),
 			totalCollectedIncludingSecrets,
-			s.TotalCards(),
-			100*(totalCollectedIncludingSecrets)/int(s.TotalCards()),
+			e.TotalCards(),
+			100*(totalCollectedIncludingSecrets)/uint64(e.TotalCards()),
 		)
 	}
 }
 
-func printBoosterProbabilities(expansions []*data.Expansion, userCollection *collection.UserCollection) {
+func printBoosterProbabilities(
+	heading string,
+	getTargets func(e *data.Expansion) ([]*data.Card, bool),
+	expansions []*data.Expansion,
+) {
 	var allBoosters []boosterWithOrigin
 	for _, e := range expansions {
-		missing, sExists := userCollection.MissingForExpansion(e.Id())
+		missing, sExists := getTargets(e)
 		if !sExists {
 			continue
 		}
@@ -369,7 +384,7 @@ func printBoosterProbabilities(expansions []*data.Expansion, userCollection *col
 		return int(1000*b.totalOfferingMissing) - int(1000*a.totalOfferingMissing)
 	})
 
-	printHeading1("Booster probabilities")
+	printHeading1(heading)
 	for i, b := range allBoosters {
 		fmt.Printf("  %v) %.2f%% %v - %v\n", i+1, b.totalOfferingMissing, b.expansion.Name(), b.booster.Name())
 	}
@@ -386,7 +401,7 @@ func runSimulations(
 	title string,
 	runMode *runOptions,
 	expansions []*data.Expansion,
-	userCollection *collection.UserCollection,
+	userCollection *userdata.UserCollection,
 	completePredicate sim.ExpansionSimCompletePredicate,
 ) error {
 	printHeading1(printer.Sprintf("%v - pack opening simulations (%d runs)", title, runMode.simulationRuns))
@@ -491,32 +506,53 @@ func main() {
 	})
 
 	// Loading collection
-	userCollection, uErr := readUserCollection(expansions)
+	userData, uErr := readUserData(expansions)
 	if uErr != nil {
 		panic(uErr)
 	}
 
 	printBoosterDataAudit(expansions)
 	fmt.Println()
-	printCurrentCollectionStats(expansions, userCollection)
+
+	printCurrentCollectionStats(expansions, userData.Collection())
 	fmt.Println()
-	printBoosterProbabilities(expansions, userCollection)
+
+	for w := range userData.Wishlists() {
+		printBoosterProbabilities(
+			fmt.Sprintf("Wishlist '%v' booster probabilities", w.Name()),
+			func(e *data.Expansion) ([]*data.Card, bool) {
+				return w.CardsForExpansion(e.Id())
+			},
+			expansions,
+		)
+		fmt.Println()
+	}
+
+	printBoosterProbabilities(
+		"Collection booster probabilities",
+		func(e *data.Expansion) ([]*data.Card, bool) {
+			return userData.Collection().MissingForExpansion(e.Id())
+		},
+		expansions,
+	)
 	fmt.Println()
+
 	runSimulations(
 		"Whole collection",
 		runMode,
 		expansions,
-		userCollection,
+		userData.Collection(),
 		func(e *data.Expansion, m []*data.Card) bool {
 			return len(m) == 0
 		},
 	)
 	fmt.Println()
+
 	runSimulations(
 		"Non-secret cards collection",
 		runMode,
 		expansions,
-		userCollection,
+		userData.Collection(),
 		func(e *data.Expansion, m []*data.Card) bool {
 			for _, card := range m {
 				if !card.Rarity().IsSecret() {

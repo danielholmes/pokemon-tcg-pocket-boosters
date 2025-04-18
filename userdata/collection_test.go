@@ -1,4 +1,4 @@
-package collection
+package userdata
 
 import (
 	"ptcgpocket/data"
@@ -10,22 +10,22 @@ func TestCreateNewCollectionWithAddedCards(t *testing.T) {
 	ga1 := data.NewCard(
 		data.NewBaseCard("Test 1", 100),
 		1,
-		&data.RarityOneDiamond,
+		data.RarityOneDiamond,
 	)
 	ga2 := data.NewCard(
 		data.NewBaseCard("Test 2", 100),
 		2,
-		&data.RarityOneDiamond,
+		data.RarityOneDiamond,
 	)
 	ga3 := data.NewCard(
 		data.NewBaseCard("Test 3", 100),
 		3,
-		&data.RarityOneDiamond,
+		data.RarityOneDiamond,
 	)
 	ga99 := data.NewCard(
 		data.NewBaseCard("Test 99", 100),
 		99,
-		&data.RarityOneDiamond,
+		data.RarityOneDiamond,
 	)
 	collection := NewUserCollection(
 		map[data.ExpansionId]*ExpansionCollection{
@@ -41,17 +41,17 @@ func TestCreateNewCollectionWithAddedCards(t *testing.T) {
 					data.NewCard(
 						data.NewBaseCard("Test MI 1", 100),
 						1,
-						&data.RarityOneDiamond,
+						data.RarityOneDiamond,
 					),
 					data.NewCard(
 						data.NewBaseCard("Test MI 2", 100),
 						2,
-						&data.RarityOneDiamond,
+						data.RarityOneDiamond,
 					),
 					data.NewCard(
 						data.NewBaseCard("Test MI 3", 100),
 						3,
-						&data.RarityOneDiamond,
+						data.RarityOneDiamond,
 					),
 				}},
 		},
