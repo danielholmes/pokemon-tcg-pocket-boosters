@@ -47,5 +47,5 @@ jobs:
       
       - name: Test run
         run: |
-          cp ./collection.json.example ./collection.json
+          cp ./data.json.example ./data.json
           ./ptcgpocket -r 20

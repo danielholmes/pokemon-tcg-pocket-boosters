@@ -13,7 +13,7 @@ A utility to work out which booster pack gives you the highest chance of receivi
 
 ## Configuring
 
-Add a `/collection.json` file which contains a map of `%expansionId% data.ExpansionId` : `[]data.ExpansionCardNumber`. See `/collection.json.example` for an example.
+Add a `/data.json` file which contains a map of `%expansionId% data.ExpansionId` : `[]data.ExpansionCardNumber`. See `/data.json.example` for an example.
 
 
 ## Building
