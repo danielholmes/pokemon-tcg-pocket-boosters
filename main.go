@@ -335,7 +335,7 @@ func printCurrentCollectionStats(expansions []*data.Expansion, userCollection *u
 			totalNonSecretCardsCollected
 
 		rarityTypes := map[rune]uint64{
-			data.RarityStarChar:  totalCrownSecretCardsCollected,
+			data.RarityStarChar:  totalStarSecretCardsCollected,
 			data.RarityCrownChar: totalCrownSecretCardsCollected,
 		}
 		if e.HasShiny() {
@@ -343,7 +343,7 @@ func printCurrentCollectionStats(expansions []*data.Expansion, userCollection *u
 		}
 		var rarityCounts []string
 		for r, t := range rarityTypes {
-			rarityCounts = append(rarityCounts, fmt.Sprintf("%v: %v", r, t))
+			rarityCounts = append(rarityCounts, fmt.Sprintf("%v: %v", string(r), t))
 		}
 
 		fmt.Printf(
@@ -519,9 +519,31 @@ func main() {
 
 	for w := range userData.Wishlists() {
 		printBoosterProbabilities(
-			fmt.Sprintf("Wishlist '%v' booster probabilities", w.Name()),
+			fmt.Sprintf("Collection + wishlist '%v' booster probabilities", w.Name()),
 			func(e *data.Expansion) ([]*data.Card, bool) {
-				return w.CardsForExpansion(e.Id())
+				cards1, f1 := w.CardsForExpansion(e.Id())
+				cards2, f2 := userData.Collection().MissingForExpansion(e.Id())
+				if !f1 && !f2 {
+					return cards1, false
+				}
+				if !f1 {
+					return cards2, true
+				}
+				if !f2 {
+					return cards1, true
+				}
+
+				allCards := append(cards1, cards2...)
+				// struct{} takes up 0 bytes
+				seen := make(map[*data.Card]struct{})
+				var uniqueCards []*data.Card
+				for _, c := range allCards {
+					if _, exists := seen[c]; !exists {
+						seen[c] = struct{}{}
+						uniqueCards = append(uniqueCards, c)
+					}
+				}
+				return uniqueCards, true
 			},
 			expansions,
 		)
