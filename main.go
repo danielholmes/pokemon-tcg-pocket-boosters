@@ -518,6 +518,18 @@ func main() {
 	fmt.Println()
 
 	for w := range userData.Wishlists() {
+		printHeading1(fmt.Sprintf("Wishlist '%v' cards", w.Name()))
+		for _, e := range expansions {
+			cards, cFound := w.CardsForExpansion(e.Id())
+			if cFound {
+				printHeading2(e.Name())
+				for _, c := range cards {
+					fmt.Printf("    %v) %v %v\n", c.Number(), c.Rarity(), c.Name())
+				}
+			}
+		}
+		fmt.Println()
+
 		printBoosterProbabilities(
 			fmt.Sprintf("Collection + wishlist '%v' booster probabilities", w.Name()),
 			func(e *data.Expansion) ([]*data.Card, bool) {
