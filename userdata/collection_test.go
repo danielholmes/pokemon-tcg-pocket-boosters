@@ -8,22 +8,22 @@ import (
 
 func TestCreateNewCollectionWithAddedCards(t *testing.T) {
 	ga1 := data.NewCard(
-		data.NewBaseCard("Test 1", 100),
+		data.NewBaseCard("Test 1", 100, 0),
 		1,
 		data.RarityOneDiamond,
 	)
 	ga2 := data.NewCard(
-		data.NewBaseCard("Test 2", 100),
+		data.NewBaseCard("Test 2", 100, 0),
 		2,
 		data.RarityOneDiamond,
 	)
 	ga3 := data.NewCard(
-		data.NewBaseCard("Test 3", 100),
+		data.NewBaseCard("Test 3", 100, 0),
 		3,
 		data.RarityOneDiamond,
 	)
 	ga99 := data.NewCard(
-		data.NewBaseCard("Test 99", 100),
+		data.NewBaseCard("Test 99", 100, 0),
 		99,
 		data.RarityOneDiamond,
 	)
@@ -39,17 +39,17 @@ func TestCreateNewCollectionWithAddedCards(t *testing.T) {
 			"mythical-island": &ExpansionCollection{
 				missingCards: []*data.Card{
 					data.NewCard(
-						data.NewBaseCard("Test MI 1", 100),
+						data.NewBaseCard("Test MI 1", 100, 0),
 						1,
 						data.RarityOneDiamond,
 					),
 					data.NewCard(
-						data.NewBaseCard("Test MI 2", 100),
+						data.NewBaseCard("Test MI 2", 100, 0),
 						2,
 						data.RarityOneDiamond,
 					),
 					data.NewCard(
-						data.NewBaseCard("Test MI 3", 100),
+						data.NewBaseCard("Test MI 3", 100, 0),
 						3,
 						data.RarityOneDiamond,
 					),

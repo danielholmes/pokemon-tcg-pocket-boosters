@@ -457,7 +457,7 @@ func runSimulations(
 		printer.Printf("     Cards from pack pts %v\n", a.numCardsObtainedFromPackPoints)
 	}
 	printer.Println()
-	printHeading2(fmt.Sprintf("Total pack openings %d\n", averagesTotal))
+	printHeading2(printer.Sprintf("Total pack openings %d\n", averagesTotal))
 
 	return nil
 }
@@ -596,6 +596,27 @@ func main() {
 			return true
 		},
 	)
+
+	// Custom query
+	// baseCardsSet := make(map[*data.BaseCard]struct{})
+	// for _, e := range expansions {
+	// 	for c := range e.Cards() {
+	// 		baseCardsSet[c.Base()] = struct{}{}
+	// 	}
+	// }
+	// var filtered []*data.BaseCard
+	// for c, _ := range baseCardsSet {
+	// 	if c.Health() >= 100 && c.RetreatCost() <= 2 {
+	// 		filtered = append(filtered, c)
+	// 	}
+	// }
+	// sorted := slices.SortedFunc(slices.Values(filtered), func (c1, c2 *data.BaseCard) int {
+	// 	return int(c2.Health()) - int(c1.Health())
+	// })
+	// printHeading1("Custom query (Highest health for retreat cost)")
+	// for _, c := range sorted {
+	// 	fmt.Printf("%v (%vHP) Ret: %v\n", c.Name(), c.Health(), c.RetreatCost())
+	// }
 }
 
 type boosterWithOrigin struct {

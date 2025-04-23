@@ -80,19 +80,34 @@ var OrderedRarities = []*Rarity{
 }
 
 type BaseCard struct {
-	name   string
-	health uint8
-	// retreatCost
+	name        string
+	health      uint8
+	retreatCost uint8
 	// moves
 	// type
+	// Weakness
 }
 
-func NewBaseCard(name string, health uint8) *BaseCard {
-	return &BaseCard{name: name, health: health}
+func NewBaseCard(name string, health uint8, retreatCost uint8) *BaseCard {
+	return &BaseCard{name: name, health: health, retreatCost: retreatCost}
 }
 
 func (c *BaseCard) Name() string {
 	return c.name
+}
+
+func (c *BaseCard) Health() uint8 {
+	return c.health
+}
+
+func (c *BaseCard) RetreatCost() uint8 {
+	return c.retreatCost
+}
+
+func (c *BaseCard) IsEqual(o *BaseCard) bool {
+	return c.name == o.name &&
+		c.health == o.health &&
+		c.retreatCost == o.retreatCost
 }
 
 type ExpansionCardNumber uint16

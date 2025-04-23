@@ -122,6 +122,19 @@ func fetchBoosterFile(booster *BoosterSerebiiSource) (string, error) {
 	return body, nil
 }
 
+func extractNodeText(node *html.Node, joiner string) string {
+	var components []string
+	for c := range node.Descendants() {
+		if c.DataAtom == 0 {
+			comp := strings.TrimSpace(c.Data)
+			if comp != "" {
+				components = append(components, comp)
+			}
+		}
+	}
+	return strings.Join(components, joiner)
+}
+
 func fetchBoosterDetails(booster *BoosterSerebiiSource, results chan<- *data.Booster) error {
 	var body, err = fetchBoosterFile(booster)
 	// TODO: Find idiomatic way to handle go routine errors
@@ -142,6 +155,7 @@ func fetchBoosterDetails(booster *BoosterSerebiiSource, results chan<- *data.Boo
 	rows := getImmediateRows(table)
 
 	cards := make([]*data.Card, len(rows))
+	var baseCards []*data.BaseCard
 	for i, r := range rows {
 		cells := []*html.Node{}
 		for c := range r.ChildNodes() {
@@ -174,16 +188,7 @@ func fetchBoosterDetails(booster *BoosterSerebiiSource, results chan<- *data.Boo
 		var name string
 		for d := range cells[2].Descendants() {
 			if d.DataAtom == atom.A {
-				var nameComponents []string
-				for c := range d.Descendants() {
-					if c.DataAtom == 0 {
-						comp := strings.TrimSpace(c.Data)
-						if comp != "" {
-							nameComponents = append(nameComponents, comp)
-						}
-					}
-				}
-				name = strings.Join(nameComponents, " ")
+				name = extractNodeText(d, " ")
 			}
 		}
 		if name == "" {
@@ -220,8 +225,81 @@ func fetchBoosterDetails(booster *BoosterSerebiiSource, results chan<- *data.Boo
 			return fmt.Errorf("no rarity found for image name %v", imageName)
 		}
 
+		// Card detailed info
+		var health uint8
+		var retreatCost uint8
+		var firstInfoNode *html.Node
+		for d := range cells[3].Descendants() {
+			firstInfoNode = d
+			break
+		}
+		// Table is a pokemon as opposed to trainer card
+		if firstInfoNode.DataAtom == atom.Table {
+			var healthText string
+			var rows []*html.Node
+			for d := range firstInfoNode.Descendants() {
+				switch d.DataAtom {
+				case atom.B:
+					{
+						newHealthText := extractNodeText(d, "")
+						if !strings.Contains(newHealthText, "HP") {
+							continue
+						}
+
+						if healthText != "" {
+							panic(fmt.Sprintf("Found multiple bolds for %v: %v -> '%v' '%v'", booster.name, name, healthText, newHealthText))
+						}
+						healthText = newHealthText
+					}
+				case atom.Tr:
+					{
+						rows = append(rows, d)
+					}
+				}
+			}
+			if len(rows) != 3 {
+				panic(fmt.Sprintf("Unexpected amount of retreat rows %v = %v", name, len(rows)))
+			}
+
+			parsedHealth, hErr := strconv.ParseUint(healthText[:len(healthText)-2], 10, 8)
+			if hErr != nil {
+				panic(hErr)
+			}
+			health = uint8(parsedHealth)
+
+			// Retreat cost
+			retreatRow := rows[2]
+			var retreatCells []*html.Node
+			for c := range retreatRow.Descendants() {
+				if c.DataAtom == atom.Td {
+					retreatCells = append(retreatCells, c)
+				}
+			}
+			if len(retreatCells) != 2 {
+				panic(fmt.Sprintf("Unexpected amount of retreat cells %v = %v", name, len(retreatCells)))
+			}
+			retreatCell := retreatCells[1]
+			for c := range retreatCell.Descendants() {
+				if c.DataAtom == atom.Img {
+					retreatCost += 1
+				}
+			}
+		}
+
+		newBaseCard := data.NewBaseCard(name, health, retreatCost)
+		baseCard := newBaseCard
+		for _, b := range baseCards {
+			if b.IsEqual(baseCard) {
+				baseCard = b
+				break
+			}
+		}
+
+		if baseCard == newBaseCard {
+			baseCards = append(baseCards, newBaseCard)
+		}
 		card := data.NewCard(
-			data.NewBaseCard(name, 0),
+			baseCard,
 			number,
 			rarity,
 		)
