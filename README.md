@@ -50,7 +50,9 @@ go test ./...
 
 ## TODO
 
- - Show fractional open packs value
+ - Too much info - better ui. Maybe menu choices.
+ - Base cards not de-duped between boosters in same expansion.
+ - Show fractional open packs value.
  - Handle special case of 283 genetic apex. Not in any boosters.
  - Include wonder picks? 
     - pick a rate such as average 3 boosters opened per day.
