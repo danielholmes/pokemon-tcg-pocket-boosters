@@ -51,7 +51,7 @@ go test ./...
 ## TODO
 
  - Too much info - better ui. Maybe menu choices.
- - Base cards not de-duped between boosters in same expansion.
+ - Base cards not de-duped between boosters in same expansion. Careful with Eevee example - need moves to work out.
  - Show fractional open packs value.
  - Handle special case of 283 genetic apex. Not in any boosters.
  - Include wonder picks? 

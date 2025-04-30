@@ -27,6 +27,7 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 	source.NewExpansionSerebiiSource(
 		"genetic-apex",
 		"Genetic Apex",
+		"A1",
 		[]*source.BoosterSerebiiSource{
 			source.NewBoosterSerebiiSource(
 				"Pikachu",
@@ -84,6 +85,7 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 	source.NewExpansionSerebiiSource(
 		"mythical-island",
 		"Mythical Island",
+		"A1a",
 		[]*source.BoosterSerebiiSource{
 			source.NewBoosterSerebiiSource(
 				"Mew",
@@ -107,6 +109,7 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 	source.NewExpansionSerebiiSource(
 		"space-time-smackdown",
 		"Space-time Smackdown",
+		"A2",
 		[]*source.BoosterSerebiiSource{
 			source.NewBoosterSerebiiSource(
 				"Dialga",
@@ -147,6 +150,7 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 	source.NewExpansionSerebiiSource(
 		"triumphant-light",
 		"Triumphant Light",
+		"A2a",
 		[]*source.BoosterSerebiiSource{
 			source.NewBoosterSerebiiSource(
 				"Arceus",
@@ -170,6 +174,7 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 	source.NewExpansionSerebiiSource(
 		"shining-revelry",
 		"Shining Revelry",
+		"A2b",
 		[]*source.BoosterSerebiiSource{
 			source.NewBoosterSerebiiSource(
 				"Booster",
@@ -187,6 +192,47 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 					data.RarityCrown:        *data.NewBoosterOffering(0.000, 0.040/1, 0.160, 2.564),
 				},
 				111,
+			),
+		},
+	),
+	source.NewExpansionSerebiiSource(
+		"celestial-guardians",
+		"Celestial Guardians",
+		"A3",
+		[]*source.BoosterSerebiiSource{
+			source.NewBoosterSerebiiSource(
+				"Solgaleo",
+				"https://www.serebii.net/tcgpocket/celestialguardians/solgaleo.shtml",
+				data.OfferingRatesTable{
+					data.RarityOneDiamond:   *data.NewBoosterOffering(100.0/44.0, 0, 0, 0),
+					data.RarityTwoDiamond:   *data.NewBoosterOffering(0.000, 89.000/34, 56.000/34, 0.000),
+					data.RarityThreeDiamond: *data.NewBoosterOffering(0.000, 4.952/14, 19.810/14, 0.000),
+					data.RarityFourDiamond:  *data.NewBoosterOffering(0.000, 1.666/5, 6.664/5, 0.000),
+					data.RarityOneStar:      *data.NewBoosterOffering(0.000, 2.572/12, 10.288/12, 28.571/12),
+					data.RarityTwoStar:      *data.NewBoosterOffering(0.000, 0.500/14, 2.000/14, 33.333/14),
+					data.RarityThreeStar:    *data.NewBoosterOffering(0.000, 0.222/1, 0.888/1, 2.380/1),
+					data.RarityOneShiny:     *data.NewBoosterOffering(0.000, 0.714/10, 2.857/10, 23.809/10),
+					data.RarityTwoShiny:     *data.NewBoosterOffering(0.000, 0.333/4, 1.333/4, 9.523/4),
+					data.RarityCrown:        *data.NewBoosterOffering(0.000, 0.040/1, 0.160/2, 2.380),
+				},
+				239,
+			),
+			source.NewBoosterSerebiiSource(
+				"Lunala",
+				"https://www.serebii.net/tcgpocket/celestialguardians/lunala.shtml",
+				data.OfferingRatesTable{
+					data.RarityOneDiamond:   *data.NewBoosterOffering(100.0/44.0, 0, 0, 0),
+					data.RarityTwoDiamond:   *data.NewBoosterOffering(0.000, 89.000/34, 56.000/34, 0.000),
+					data.RarityThreeDiamond: *data.NewBoosterOffering(0.000, 4.952/14, 19.810/14, 0.000),
+					data.RarityFourDiamond:  *data.NewBoosterOffering(0.000, 1.666/5, 6.664/5, 0.000),
+					data.RarityOneStar:      *data.NewBoosterOffering(0.000, 2.572/12, 10.288/12, 28.571/12),
+					data.RarityTwoStar:      *data.NewBoosterOffering(0.000, 0.500/14, 2.000/14, 33.333/14),
+					data.RarityThreeStar:    *data.NewBoosterOffering(0.000, 0.222/1, 0.888/1, 2.380/1),
+					data.RarityOneShiny:     *data.NewBoosterOffering(0.000, 0.714/10, 2.857/10, 23.809/10),
+					data.RarityTwoShiny:     *data.NewBoosterOffering(0.000, 0.333/4, 1.333/4, 9.523/4),
+					data.RarityCrown:        *data.NewBoosterOffering(0.000, 0.040/1, 0.160/2, 2.380),
+				},
+				238,
 			),
 		},
 	),

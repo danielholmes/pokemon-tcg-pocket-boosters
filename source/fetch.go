@@ -222,7 +222,7 @@ func fetchBoosterDetails(booster *BoosterSerebiiSource, results chan<- *data.Boo
 		}
 		var rarity *data.Rarity = imageNameRarities[imageName]
 		if rarity == nil {
-			return fmt.Errorf("no rarity found for image name %v", imageName)
+			return fmt.Errorf("no rarity found for image on %v with name %v", name, imageName)
 		}
 
 		// Card detailed info
@@ -310,7 +310,7 @@ func fetchBoosterDetails(booster *BoosterSerebiiSource, results chan<- *data.Boo
 		booster.Name(),
 		cards,
 		booster.OfferingRates(),
-		booster.CrownExclusiveExpansionNumber(),
+		booster.RarePackCrownExclusiveExpansionNumber(),
 	)
 	return nil
 }
@@ -346,6 +346,6 @@ func FetchExpansionDetails(ctx context.Context, s *ExpansionSerebiiSource, resul
 		},
 	)
 
-	results <- data.NewExpansion(s.Id(), s.Name(), boosters)
+	results <- data.NewExpansion(s.Id(), s.Name(), s.Code(), boosters)
 	return nil
 }

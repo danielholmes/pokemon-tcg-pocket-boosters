@@ -123,21 +123,20 @@ func (o *offeringProbabilityList) pickRandomCard(randomGenerator *rand.Rand) *Ca
 }
 
 type Booster struct {
-	name                          string
-	cards                         []*Card
-	crownExclusiveExpansionNumber ExpansionCardNumber
-	offerings                     iter.Seq[*BoosterCardOffering]
-	regularPack1To3List           *offeringProbabilityList
-	regularPack4List              *offeringProbabilityList
-	regularPack5List              *offeringProbabilityList
-	rarePackList                  *offeringProbabilityList
+	name                string
+	cards               []*Card
+	offerings           iter.Seq[*BoosterCardOffering]
+	regularPack1To3List *offeringProbabilityList
+	regularPack4List    *offeringProbabilityList
+	regularPack5List    *offeringProbabilityList
+	rarePackList        *offeringProbabilityList
 }
 
 func NewBooster(
 	name string,
 	cards []*Card,
 	offeringRates OfferingRatesTable,
-	crownExclusiveExpansionNumber ExpansionCardNumber,
+	rarePackCrownExclusiveExpansionNumber ExpansionCardNumber,
 ) *Booster {
 	offerings := make([]*BoosterCardOffering, len(cards))
 	regularPack1To3List := offeringProbabilityList{}
@@ -152,7 +151,7 @@ func NewBooster(
 		}
 
 		rareCardOffering := 0.0
-		if c.Rarity() != RarityCrown || c.number == crownExclusiveExpansionNumber {
+		if c.Rarity() != RarityCrown || c.number == rarePackCrownExclusiveExpansionNumber {
 			rareCardOffering = offeringRef.rareOffering
 		}
 
@@ -171,14 +170,13 @@ func NewBooster(
 	}
 
 	return &Booster{
-		name:                          name,
-		cards:                         cards,
-		crownExclusiveExpansionNumber: crownExclusiveExpansionNumber,
-		offerings:                     slices.Values(offerings),
-		regularPack1To3List:           &regularPack1To3List,
-		regularPack4List:              &regularPack4List,
-		regularPack5List:              &regularPack5List,
-		rarePackList:                  &rarePackList,
+		name:                name,
+		cards:               cards,
+		offerings:           slices.Values(offerings),
+		regularPack1To3List: &regularPack1To3List,
+		regularPack4List:    &regularPack4List,
+		regularPack5List:    &regularPack5List,
+		rarePackList:        &rarePackList,
 	}
 }
 

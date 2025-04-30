@@ -12,6 +12,7 @@ type ExpansionId = string
 type Expansion struct {
 	id                  ExpansionId
 	name                string
+	code                string
 	boosters            iter.Seq[*Booster]
 	cards               iter.Seq[*Card]
 	totalNonSecretCards uint16
@@ -21,6 +22,7 @@ type Expansion struct {
 func NewExpansion(
 	id ExpansionId,
 	name string,
+	code string,
 	boosters []*Booster,
 ) *Expansion {
 	var cards []*Card
@@ -45,6 +47,7 @@ func NewExpansion(
 	return &Expansion{
 		id:                  id,
 		name:                name,
+		code:                code,
 		boosters:            slices.Values(boosters),
 		cards:               slices.Values(cards),
 		totalSecretCards:    totalSecretCards,

@@ -7,23 +7,23 @@ import (
 )
 
 type BoosterSerebiiSource struct {
-	name                          string
-	serebiiUrl                    string
-	offeringRates                 data.OfferingRatesTable
-	crownExclusiveExpansionNumber data.ExpansionCardNumber
+	name                                  string
+	serebiiUrl                            string
+	offeringRates                         data.OfferingRatesTable
+	rarePackCrownExclusiveExpansionNumber data.ExpansionCardNumber
 }
 
 func NewBoosterSerebiiSource(
 	name string,
 	serebiiUrl string,
 	offeringRates data.OfferingRatesTable,
-	crownExclusiveExpansionNumber data.ExpansionCardNumber,
+	rarePackCrownExclusiveExpansionNumber data.ExpansionCardNumber,
 ) *BoosterSerebiiSource {
 	return &BoosterSerebiiSource{
-		name:                          name,
-		serebiiUrl:                    serebiiUrl,
-		offeringRates:                 offeringRates,
-		crownExclusiveExpansionNumber: crownExclusiveExpansionNumber,
+		name:                                  name,
+		serebiiUrl:                            serebiiUrl,
+		offeringRates:                         offeringRates,
+		rarePackCrownExclusiveExpansionNumber: rarePackCrownExclusiveExpansionNumber,
 	}
 }
 
@@ -31,8 +31,8 @@ func (b *BoosterSerebiiSource) Name() string {
 	return b.name
 }
 
-func (b *BoosterSerebiiSource) CrownExclusiveExpansionNumber() data.ExpansionCardNumber {
-	return b.crownExclusiveExpansionNumber
+func (b *BoosterSerebiiSource) RarePackCrownExclusiveExpansionNumber() data.ExpansionCardNumber {
+	return b.rarePackCrownExclusiveExpansionNumber
 }
 
 func (b *BoosterSerebiiSource) SerebiiUrl() string {
@@ -46,17 +46,20 @@ func (b *BoosterSerebiiSource) OfferingRates() data.OfferingRatesTable {
 type ExpansionSerebiiSource struct {
 	id             string
 	name           string
+	code           string
 	boosterSources []*BoosterSerebiiSource
 }
 
 func NewExpansionSerebiiSource(
 	id string,
 	name string,
+	code string,
 	boosterSources []*BoosterSerebiiSource,
 ) *ExpansionSerebiiSource {
 	return &ExpansionSerebiiSource{
 		id:             id,
 		name:           name,
+		code:           code,
 		boosterSources: boosterSources,
 	}
 }
@@ -67,6 +70,10 @@ func (s *ExpansionSerebiiSource) Id() string {
 
 func (s *ExpansionSerebiiSource) Name() string {
 	return s.name
+}
+
+func (s *ExpansionSerebiiSource) Code() string {
+	return s.code
 }
 
 func (s *ExpansionSerebiiSource) BoosterSources() iter.Seq[*BoosterSerebiiSource] {
