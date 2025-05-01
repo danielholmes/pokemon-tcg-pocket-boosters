@@ -143,6 +143,13 @@ func NewBooster(
 	regularPack4List := offeringProbabilityList{}
 	regularPack5List := offeringProbabilityList{}
 	rarePackList := offeringProbabilityList{}
+
+	cardsByRarity := make(map[*Rarity]uint16)
+
+	for _, c := range cards {
+		cardsByRarity[c.Rarity()] += 1
+	}
+
 	for i, c := range cards {
 		offeringRef, offeringRefExists := offeringRates[c.Rarity()]
 		if !offeringRefExists {
@@ -151,16 +158,19 @@ func NewBooster(
 		}
 
 		rareCardOffering := 0.0
+		numOfRarity := float64(cardsByRarity[c.Rarity()])
 		if c.Rarity() != RarityCrown || c.number == rarePackCrownExclusiveExpansionNumber {
 			rareCardOffering = offeringRef.rareOffering
+		} else if c.number == rarePackCrownExclusiveExpansionNumber {
+			numOfRarity -= 1
 		}
 
 		offerings[i] = &BoosterCardOffering{
 			card:               c,
-			first3CardOffering: offeringRef.first3CardOffering,
-			fourthCardOffering: offeringRef.fourthCardOffering,
-			fifthCardOffering:  offeringRef.fifthCardOffering,
-			rareCardOffering:   rareCardOffering,
+			first3CardOffering: offeringRef.first3CardOffering / numOfRarity,
+			fourthCardOffering: offeringRef.fourthCardOffering / numOfRarity,
+			fifthCardOffering:  offeringRef.fifthCardOffering / numOfRarity,
+			rareCardOffering:   rareCardOffering / numOfRarity,
 		}
 
 		regularPack1To3List.append(c, offeringRef.first3CardOffering)
