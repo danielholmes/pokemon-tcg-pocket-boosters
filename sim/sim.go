@@ -96,14 +96,33 @@ func RunSim(
 			}
 
 			// Decide, should we trade in pack points or pick a booster?
-			// TODO: This can be more efficient by ending search early.
+			// TODO: Can exit early, but needs some careful thought on exact conditions
 			var highestPackPointsCard *data.Card
+			var packPointsToObtainAllMissing uint64 = 0
 			for _, card := range missing {
+				packPointsToObtainAllMissing += uint64(card.Rarity().PackPointsToObtain())
 				if highestPackPointsCard == nil || card.Rarity().PackPointsToObtain() > highestPackPointsCard.Rarity().PackPointsToObtain() {
 					highestPackPointsCard = card
 				}
 			}
-			if highestPackPointsCard != nil && eCollection.PackPoints() >= highestPackPointsCard.Rarity().PackPointsToObtain() {
+
+			// We have max pack points, use some now so can continue to accrue
+			if eCollection.PackPoints() == data.MaxPackPointsPerBooster {
+				if highestPackPointsCard == nil {
+					panic("No highest pack point card")
+				}
+
+				eCollection.AcquireCardUsingPackPoints(highestPackPointsCard)
+				eSimRun.numCardsObtainedFromPackPoints += 1
+				continue
+			}
+
+			// We have enough pack points to complete our collection
+			if packPointsToObtainAllMissing > 0 && packPointsToObtainAllMissing <= uint64(eCollection.PackPoints()) {
+				if highestPackPointsCard == nil {
+					panic("No highest pack point card")
+				}
+
 				eCollection.AcquireCardUsingPackPoints(highestPackPointsCard)
 				eSimRun.numCardsObtainedFromPackPoints += 1
 				continue
@@ -119,7 +138,6 @@ func RunSim(
 			}
 
 			boosterInstance := simBooster.CreateRandomInstance(randomGenerator)
-			// fmt.Printf("C %v \n", boosterInstance.CardNumbers())
 			eCollection.AcquireCardsFromBooster(boosterInstance.Cards())
 
 			eSimRun.numOpened++

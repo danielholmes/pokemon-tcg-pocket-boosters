@@ -23,9 +23,22 @@ func (c *ExpansionCollection) PackPoints() uint16 {
 func (c *ExpansionCollection) AcquireCardUsingPackPoints(
 	card *data.Card,
 ) {
+	previousCardsLength := len(c.missingCards)
 	c.missingCards = slices.DeleteFunc(c.missingCards, func(n *data.Card) bool {
 		return n == card
 	})
+	if previousCardsLength != len(c.missingCards)+1 {
+		panic("Card not missing")
+	}
+	if c.packPoints < card.Rarity().PackPointsToObtain() {
+		panic(
+			fmt.Sprintf(
+				"Not enough pack points to obtain (%v), require (%v)",
+				c.packPoints,
+				card.Rarity().PackPointsToObtain(),
+			),
+		)
+	}
 	c.packPoints -= card.Rarity().PackPointsToObtain()
 }
 
@@ -40,7 +53,7 @@ func (c *ExpansionCollection) AcquireCardsFromBooster(
 		}
 		return false
 	})
-	c.packPoints += packPointsPerBooster
+	c.packPoints = min(c.packPoints+packPointsPerBooster, data.MaxPackPointsPerBooster)
 }
 
 func (c *ExpansionCollection) NumPackPoints() uint16 {

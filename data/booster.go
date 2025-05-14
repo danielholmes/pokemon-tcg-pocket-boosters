@@ -30,6 +30,8 @@ func NewBoosterOffering(
 
 var NotPresentBoosterOffering = NewBoosterOffering(0, 0, 0, 0)
 
+const MaxPackPointsPerBooster uint16 = 2_500
+
 const regularPackRate = 0.9995
 const rarePackRate = 1.0 - regularPackRate
 
