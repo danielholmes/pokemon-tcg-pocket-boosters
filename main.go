@@ -236,6 +236,31 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 			),
 		},
 	),
+	source.NewExpansionSerebiiSource(
+		"extradimensional-crisis",
+		"Extradimensional Crisis",
+		"A3a",
+		[]*source.BoosterSerebiiSource{
+			source.NewBoosterSerebiiSource(
+				"Booster",
+				"https://www.serebii.net/tcgpocket/extradimensionalcrisis/booster.shtml",
+				data.OfferingRatesTable{
+					data.RarityOneDiamond: *data.NewBoosterOffering(100.0, 0, 0, 0),
+
+					data.RarityTwoDiamond:   *data.NewBoosterOffering(0.000, 89.000, 56.000, 0.000),
+					data.RarityThreeDiamond: *data.NewBoosterOffering(0.000, 4.952, 19.810, 0.000),
+					data.RarityFourDiamond:  *data.NewBoosterOffering(0.000, 1.666, 6.664, 0.000),
+					data.RarityOneStar:      *data.NewBoosterOffering(0.000, 2.572, 10.288, 17.647),
+					data.RarityTwoStar:      *data.NewBoosterOffering(0.000, 0.500, 2.000, 35.294),
+					data.RarityThreeStar:    *data.NewBoosterOffering(0.000, 0.222, 0.888, 2.941),
+					data.RarityOneShiny:     *data.NewBoosterOffering(0.000, 0.714, 2.857, 29.411),
+					data.RarityTwoShiny:     *data.NewBoosterOffering(0.000, 0.333, 1.333, 11.764),
+					data.RarityCrown:        *data.NewBoosterOffering(0.000, 0.040, 0.160, 2.941),
+				},
+				239,
+			),
+		},
+	),
 }
 
 func readUserData(expansions []*data.Expansion) (*userdata.UserData, error) {
