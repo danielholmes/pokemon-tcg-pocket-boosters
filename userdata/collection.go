@@ -8,8 +8,6 @@ import (
 	"slices"
 )
 
-const packPointsPerBooster = 5
-
 type ExpansionCollection struct {
 	// Has a max of 2,500
 	packPoints   uint16
@@ -45,6 +43,10 @@ func (c *ExpansionCollection) AcquireCardUsingPackPoints(
 func (c *ExpansionCollection) AcquireCardsFromBooster(
 	added iter.Seq[*data.Card],
 ) {
+	var numCards uint16
+	for range added {
+		numCards = numCards + 1
+	}
 	c.missingCards = slices.DeleteFunc(c.missingCards, func(c *data.Card) bool {
 		for a := range added {
 			if a == c {
@@ -53,7 +55,7 @@ func (c *ExpansionCollection) AcquireCardsFromBooster(
 		}
 		return false
 	})
-	c.packPoints = min(c.packPoints+packPointsPerBooster, data.MaxPackPointsPerBooster)
+	c.packPoints = min(c.packPoints+numCards, data.MaxPackPointsPerBooster)
 }
 
 func (c *ExpansionCollection) NumPackPoints() uint16 {

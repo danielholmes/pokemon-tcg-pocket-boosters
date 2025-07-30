@@ -24,6 +24,9 @@ func TestNewBoosterOfferings(t *testing.T) {
 			},
 		},
 		1,
+		0.9995,
+		0,
+		0.0005,
 	)
 
 	offeringsSeq := booster.Offerings()

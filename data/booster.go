@@ -32,9 +32,6 @@ var NotPresentBoosterOffering = NewBoosterOffering(0, 0, 0, 0)
 
 const MaxPackPointsPerBooster uint16 = 2_500
 
-const regularPackRate = 0.9995
-const rarePackRate = 1.0 - regularPackRate
-
 type BoosterCardOffering struct {
 	card               *Card
 	first3CardOffering float64
@@ -72,12 +69,13 @@ func (b *BoosterCardOffering) RegularPackOffering() float64 {
 }
 
 type BoosterInstance struct {
-	isRare bool
-	cards  iter.Seq[*Card]
+	isRare   bool
+	cards    iter.Seq[*Card]
+	numCards uint8
 }
 
-func NewBoosterInstance(isRare bool, cards [5]*Card) *BoosterInstance {
-	return &BoosterInstance{isRare: isRare, cards: slices.Values(cards[:])}
+func NewBoosterInstance(isRare bool, cards []*Card) *BoosterInstance {
+	return &BoosterInstance{isRare: isRare, cards: slices.Values(cards[:]), numCards: uint8(len(cards))}
 }
 
 func (b *BoosterInstance) IsRare() bool {
@@ -86,6 +84,10 @@ func (b *BoosterInstance) IsRare() bool {
 
 func (b *BoosterInstance) Cards() iter.Seq[*Card] {
 	return b.cards
+}
+
+func (b *BoosterInstance) NumCards() uint8 {
+	return b.numCards
 }
 
 type OfferingRatesTable map[*Rarity]BoosterOffering
@@ -124,14 +126,20 @@ func (o *offeringProbabilityList) pickRandomCard(randomGenerator *rand.Rand) *Ca
 	panic(fmt.Sprintf("Invalid algorithm %v num %v total", num, o.totalProbability))
 }
 
+// type PackType interface {
+// }
+
 type Booster struct {
-	name                string
-	cards               []*Card
-	offerings           iter.Seq[*BoosterCardOffering]
-	regularPack1To3List *offeringProbabilityList
-	regularPack4List    *offeringProbabilityList
-	regularPack5List    *offeringProbabilityList
-	rarePackList        *offeringProbabilityList
+	name                   string
+	cards                  []*Card
+	offerings              iter.Seq[*BoosterCardOffering]
+	regularPack1To3List    *offeringProbabilityList
+	regularPack4List       *offeringProbabilityList
+	regularPack5List       *offeringProbabilityList
+	rarePackList           *offeringProbabilityList
+	regularPackRate        float64
+	regularPackPlusOneRate float64
+	rarePackRate           float64
 }
 
 func NewBooster(
@@ -139,7 +147,15 @@ func NewBooster(
 	cards []*Card,
 	offeringRates OfferingRatesTable,
 	rarePackCrownExclusiveExpansionNumber ExpansionCardNumber,
+	regularPackRate float64,
+	regularPackPlusOneRate float64,
+	rarePackRate float64,
 ) *Booster {
+	totalPackRate := regularPackRate + regularPackPlusOneRate + rarePackRate
+	if totalPackRate != 1.0 {
+		panic(fmt.Sprintf("Total pack chance doesn't equal 1 for %s - %f, %f, %f = %f", name, regularPackRate, regularPackPlusOneRate, rarePackRate, totalPackRate))
+	}
+
 	offerings := make([]*BoosterCardOffering, len(cards))
 	regularPack1To3List := offeringProbabilityList{}
 	regularPack4List := offeringProbabilityList{}
@@ -182,13 +198,16 @@ func NewBooster(
 	}
 
 	return &Booster{
-		name:                name,
-		cards:               cards,
-		offerings:           slices.Values(offerings),
-		regularPack1To3List: &regularPack1To3List,
-		regularPack4List:    &regularPack4List,
-		regularPack5List:    &regularPack5List,
-		rarePackList:        &rarePackList,
+		name:                   name,
+		cards:                  cards,
+		offerings:              slices.Values(offerings),
+		regularPack1To3List:    &regularPack1To3List,
+		regularPack4List:       &regularPack4List,
+		regularPack5List:       &regularPack5List,
+		rarePackList:           &rarePackList,
+		regularPackRate:        regularPackRate,
+		regularPackPlusOneRate: regularPackPlusOneRate,
+		rarePackRate:           rarePackRate,
 	}
 }
 
@@ -201,6 +220,7 @@ func (b *Booster) Offerings() iter.Seq[*BoosterCardOffering] {
 }
 
 func (b *Booster) GetInstanceProbabilityForMissing(missing []*Card) float64 {
+	// TODO: Take into account regular+1 pack
 	totalRegularPackOffering := 0.0
 	totalRarePackOffering := 0.0
 	for o := range b.Offerings() {
@@ -209,32 +229,50 @@ func (b *Booster) GetInstanceProbabilityForMissing(missing []*Card) float64 {
 			totalRarePackOffering += o.RarePackOffering()
 		}
 	}
-	return totalRegularPackOffering*regularPackRate + totalRarePackOffering*rarePackRate
+	return totalRegularPackOffering*b.regularPackRate + totalRarePackOffering*b.rarePackRate
 }
 
 func (b *Booster) CreateRandomInstance(randomGenerator *rand.Rand) *BoosterInstance {
 	// Rare pack
-	rareNum := randomGenerator.Float64()
-	if rareNum < rarePackRate {
+	probabilityNum := randomGenerator.Float64()
+	if probabilityNum < b.rarePackRate {
 		return NewBoosterInstance(
 			true,
-			[5]*Card{
+			[]*Card{
 				b.rarePackList.pickRandomCard(randomGenerator),
 				b.rarePackList.pickRandomCard(randomGenerator),
 				b.rarePackList.pickRandomCard(randomGenerator),
 				b.rarePackList.pickRandomCard(randomGenerator),
 				b.rarePackList.pickRandomCard(randomGenerator),
-			})
+			},
+		)
+	}
+
+	// Regular + 1 pack
+	if probabilityNum < (b.rarePackRate + b.regularPackPlusOneRate) {
+		return NewBoosterInstance(
+			false,
+			[]*Card{
+				// TODO: Proper implementation for 6 cards
+				b.regularPack1To3List.pickRandomCard(randomGenerator),
+				b.regularPack1To3List.pickRandomCard(randomGenerator),
+				b.regularPack1To3List.pickRandomCard(randomGenerator),
+				b.regularPack4List.pickRandomCard(randomGenerator),
+				b.regularPack5List.pickRandomCard(randomGenerator),
+				b.regularPack5List.pickRandomCard(randomGenerator),
+			},
+		)
 	}
 
 	// Regular pack
 	return NewBoosterInstance(
 		false,
-		[5]*Card{
+		[]*Card{
 			b.regularPack1To3List.pickRandomCard(randomGenerator),
 			b.regularPack1To3List.pickRandomCard(randomGenerator),
 			b.regularPack1To3List.pickRandomCard(randomGenerator),
 			b.regularPack4List.pickRandomCard(randomGenerator),
 			b.regularPack5List.pickRandomCard(randomGenerator),
-		})
+		},
+	)
 }

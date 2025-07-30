@@ -247,7 +247,7 @@ func fetchBoosterDetails(booster *BoosterSerebiiSource, results chan<- *data.Boo
 						}
 
 						if healthText != "" {
-							panic(fmt.Sprintf("Found multiple bolds for %v: %v -> '%v' '%v'", booster.name, name, healthText, newHealthText))
+							return fmt.Errorf("found multiple bolds for %v: %v -> '%v' '%v'", booster.name, name, healthText, newHealthText)
 						}
 						healthText = newHealthText
 					}
@@ -258,12 +258,13 @@ func fetchBoosterDetails(booster *BoosterSerebiiSource, results chan<- *data.Boo
 				}
 			}
 			if len(rows) != 3 {
-				panic(fmt.Sprintf("Unexpected amount of retreat rows %v = %v", name, len(rows)))
+				return fmt.Errorf("unexpected amount of retreat rows %v = %v", name, len(rows))
 			}
 
-			parsedHealth, hErr := strconv.ParseUint(healthText[:len(healthText)-2], 10, 8)
+			rawHealthText := healthText[:len(healthText)-2]
+			parsedHealth, hErr := strconv.ParseUint(rawHealthText, 10, 8)
 			if hErr != nil {
-				panic(hErr)
+				return fmt.Errorf("couldn't parse health '%s' for '%s' : %w", rawHealthText, name, hErr)
 			}
 			health = uint8(parsedHealth)
 
@@ -276,7 +277,7 @@ func fetchBoosterDetails(booster *BoosterSerebiiSource, results chan<- *data.Boo
 				}
 			}
 			if len(retreatCells) != 2 {
-				panic(fmt.Sprintf("Unexpected amount of retreat cells %v = %v", name, len(retreatCells)))
+				return fmt.Errorf("unexpected amount of retreat cells %v = %v", name, len(retreatCells))
 			}
 			retreatCell := retreatCells[1]
 			for c := range retreatCell.Descendants() {
@@ -311,6 +312,9 @@ func fetchBoosterDetails(booster *BoosterSerebiiSource, results chan<- *data.Boo
 		cards,
 		booster.OfferingRates(),
 		booster.RarePackCrownExclusiveExpansionNumber(),
+		booster.RegularPackRate(),
+		booster.RegularPackPlusOneRate(),
+		booster.RarePackRate(),
 	)
 	return nil
 }
@@ -325,7 +329,11 @@ func FetchExpansionDetails(ctx context.Context, s *ExpansionSerebiiSource, resul
 		boosterSources[s.Name()] = i
 		i++
 		g.Go(func() error {
-			return fetchBoosterDetails(s, boosterResults)
+			err := fetchBoosterDetails(s, boosterResults)
+			if err == nil {
+				return nil
+			}
+			return fmt.Errorf("failed to fetch booster details for '%s': %w", s.name, err)
 		})
 	}
 	err := g.Wait()

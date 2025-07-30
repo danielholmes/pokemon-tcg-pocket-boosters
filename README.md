@@ -50,6 +50,7 @@ go test ./...
 
 ## TODO
 
+ - Implement regular + 1 pack probabilities
  - Too much info - better ui. Maybe menu choices.
  - Base cards not de-duped between boosters in same expansion. Careful with Eevee example - need moves to work out.
  - Show fractional open packs value.

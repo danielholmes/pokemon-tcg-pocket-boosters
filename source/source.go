@@ -11,6 +11,9 @@ type BoosterSerebiiSource struct {
 	serebiiUrl                            string
 	offeringRates                         data.OfferingRatesTable
 	rarePackCrownExclusiveExpansionNumber data.ExpansionCardNumber
+	regularPackRate                       float64
+	regularPackPlusOneRate                float64
+	rarePackRate                          float64
 }
 
 func NewBoosterSerebiiSource(
@@ -18,12 +21,18 @@ func NewBoosterSerebiiSource(
 	serebiiUrl string,
 	offeringRates data.OfferingRatesTable,
 	rarePackCrownExclusiveExpansionNumber data.ExpansionCardNumber,
+	regularPackRate float64,
+	regularPackPlusOneRate float64,
+	rarePackRate float64,
 ) *BoosterSerebiiSource {
 	return &BoosterSerebiiSource{
 		name:                                  name,
 		serebiiUrl:                            serebiiUrl,
 		offeringRates:                         offeringRates,
 		rarePackCrownExclusiveExpansionNumber: rarePackCrownExclusiveExpansionNumber,
+		regularPackRate:                       regularPackRate,
+		regularPackPlusOneRate:                regularPackPlusOneRate,
+		rarePackRate:                          rarePackRate,
 	}
 }
 
@@ -41,6 +50,18 @@ func (b *BoosterSerebiiSource) SerebiiUrl() string {
 
 func (b *BoosterSerebiiSource) OfferingRates() data.OfferingRatesTable {
 	return b.offeringRates
+}
+
+func (b *BoosterSerebiiSource) RegularPackRate() float64 {
+	return b.regularPackRate
+}
+
+func (b *BoosterSerebiiSource) RegularPackPlusOneRate() float64 {
+	return b.regularPackPlusOneRate
+}
+
+func (b *BoosterSerebiiSource) RarePackRate() float64 {
+	return b.rarePackRate
 }
 
 type ExpansionSerebiiSource struct {

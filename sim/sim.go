@@ -141,7 +141,7 @@ func RunSim(
 			eCollection.AcquireCardsFromBooster(boosterInstance.Cards())
 
 			eSimRun.numOpened++
-			eSimRun.totalPackPoints += 5
+			eSimRun.totalPackPoints += uint64(boosterInstance.NumCards())
 			if boosterInstance.IsRare() {
 				eSimRun.numRarePacks++
 			}
