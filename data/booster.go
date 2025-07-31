@@ -69,13 +69,12 @@ func (b *BoosterCardOffering) RegularPackOffering() float64 {
 }
 
 type BoosterInstance struct {
-	isRare   bool
-	cards    iter.Seq[*Card]
-	numCards uint8
+	isRare bool
+	cards  iter.Seq[*Card]
 }
 
 func NewBoosterInstance(isRare bool, cards []*Card) *BoosterInstance {
-	return &BoosterInstance{isRare: isRare, cards: slices.Values(cards[:]), numCards: uint8(len(cards))}
+	return &BoosterInstance{isRare: isRare, cards: slices.Values(cards[:])}
 }
 
 func (b *BoosterInstance) IsRare() bool {
@@ -84,10 +83,6 @@ func (b *BoosterInstance) IsRare() bool {
 
 func (b *BoosterInstance) Cards() iter.Seq[*Card] {
 	return b.cards
-}
-
-func (b *BoosterInstance) NumCards() uint8 {
-	return b.numCards
 }
 
 type OfferingRatesTable map[*Rarity]BoosterOffering

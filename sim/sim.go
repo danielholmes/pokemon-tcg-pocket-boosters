@@ -67,6 +67,8 @@ func (r *SimRun) ExpansionRuns() iter.Seq2[*data.Expansion, *ExpansionSimRun] {
 
 type ExpansionSimCompletePredicate func(*data.Expansion, []*data.Card) bool
 
+var packPointsPerOpening uint64 = 5
+
 func RunSim(
 	expansions []*data.Expansion,
 	userCollection *userdata.UserCollection,
@@ -141,7 +143,7 @@ func RunSim(
 			eCollection.AcquireCardsFromBooster(boosterInstance.Cards())
 
 			eSimRun.numOpened++
-			eSimRun.totalPackPoints += uint64(boosterInstance.NumCards())
+			eSimRun.totalPackPoints += packPointsPerOpening
 			if boosterInstance.IsRare() {
 				eSimRun.numRarePacks++
 			}
