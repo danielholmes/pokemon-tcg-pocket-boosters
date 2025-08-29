@@ -50,6 +50,11 @@ go test ./...
 
 ## TODO
 
+ - Switch to tcgdex
+  - https://api.tcgdex.net/v2/en/sets?id=A*
+  - https://api.tcgdex.net/v2/en/sets/A2
+  - https://api.tcgdex.net/v2/en/cards?id=A*
+  - https://api.tcgdex.net/v2/en/cards/A1-005
  - Implement regular + 1 pack probabilities
  - Put trades in the simulation. Could make ideal strategy kind of complex, e.g. should maybe ignore 4D, 3D and 1* 
    when deciding pack openings.
