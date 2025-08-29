@@ -12,8 +12,8 @@ import (
 	"strings"
 
 	"ptcgpocket/data"
+	"ptcgpocket/serebii"
 	"ptcgpocket/sim"
-	"ptcgpocket/source"
 	"ptcgpocket/userdata"
 
 	"golang.org/x/sync/errgroup"
@@ -23,13 +23,13 @@ import (
 
 var printer = message.NewPrinter(language.English)
 
-var expansionDataSources = [...]*source.ExpansionSerebiiSource{
-	source.NewExpansionSerebiiSource(
+var expansionDataSources = [...]*serebii.ExpansionSerebiiSource{
+	serebii.NewExpansionSerebiiSource(
 		"genetic-apex",
 		"Genetic Apex",
 		"A1",
-		[]*source.BoosterSerebiiSource{
-			source.NewBoosterSerebiiSource(
+		[]*serebii.BoosterSerebiiSource{
+			serebii.NewBoosterSerebiiSource(
 				"Pikachu",
 				"https://www.serebii.net/tcgpocket/geneticapex/pikachu.shtml",
 				data.OfferingRatesTable{
@@ -49,7 +49,7 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 				0,
 				0.0005,
 			),
-			source.NewBoosterSerebiiSource(
+			serebii.NewBoosterSerebiiSource(
 				"MewTwo",
 				"https://www.serebii.net/tcgpocket/geneticapex/mewtwo.shtml",
 				data.OfferingRatesTable{
@@ -69,7 +69,7 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 				0,
 				0.0005,
 			),
-			source.NewBoosterSerebiiSource(
+			serebii.NewBoosterSerebiiSource(
 				"Charizard",
 				"https://www.serebii.net/tcgpocket/geneticapex/charizard.shtml",
 				data.OfferingRatesTable{
@@ -91,12 +91,12 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 			),
 		},
 	),
-	source.NewExpansionSerebiiSource(
+	serebii.NewExpansionSerebiiSource(
 		"mythical-island",
 		"Mythical Island",
 		"A1a",
-		[]*source.BoosterSerebiiSource{
-			source.NewBoosterSerebiiSource(
+		[]*serebii.BoosterSerebiiSource{
+			serebii.NewBoosterSerebiiSource(
 				"Mew",
 				"https://www.serebii.net/tcgpocket/mythicalisland/mew.shtml",
 				data.OfferingRatesTable{
@@ -118,12 +118,12 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 			),
 		},
 	),
-	source.NewExpansionSerebiiSource(
+	serebii.NewExpansionSerebiiSource(
 		"space-time-smackdown",
 		"Space-time Smackdown",
 		"A2",
-		[]*source.BoosterSerebiiSource{
-			source.NewBoosterSerebiiSource(
+		[]*serebii.BoosterSerebiiSource{
+			serebii.NewBoosterSerebiiSource(
 				"Dialga",
 				"https://www.serebii.net/tcgpocket/space-timesmackdown/dialga.shtml",
 				data.OfferingRatesTable{
@@ -143,7 +143,7 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 				0,
 				0.0005,
 			),
-			source.NewBoosterSerebiiSource(
+			serebii.NewBoosterSerebiiSource(
 				"Palkia",
 				"https://www.serebii.net/tcgpocket/space-timesmackdown/palkia.shtml",
 				data.OfferingRatesTable{
@@ -165,12 +165,12 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 			),
 		},
 	),
-	source.NewExpansionSerebiiSource(
+	serebii.NewExpansionSerebiiSource(
 		"triumphant-light",
 		"Triumphant Light",
 		"A2a",
-		[]*source.BoosterSerebiiSource{
-			source.NewBoosterSerebiiSource(
+		[]*serebii.BoosterSerebiiSource{
+			serebii.NewBoosterSerebiiSource(
 				"Arceus",
 				"https://www.serebii.net/tcgpocket/triumphantlight/arceus.shtml",
 				data.OfferingRatesTable{
@@ -192,12 +192,12 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 			),
 		},
 	),
-	source.NewExpansionSerebiiSource(
+	serebii.NewExpansionSerebiiSource(
 		"shining-revelry",
 		"Shining Revelry",
 		"A2b",
-		[]*source.BoosterSerebiiSource{
-			source.NewBoosterSerebiiSource(
+		[]*serebii.BoosterSerebiiSource{
+			serebii.NewBoosterSerebiiSource(
 				"Booster",
 				"https://www.serebii.net/tcgpocket/shiningrevelry/booster.shtml",
 				data.OfferingRatesTable{
@@ -219,12 +219,12 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 			),
 		},
 	),
-	source.NewExpansionSerebiiSource(
+	serebii.NewExpansionSerebiiSource(
 		"celestial-guardians",
 		"Celestial Guardians",
 		"A3",
-		[]*source.BoosterSerebiiSource{
-			source.NewBoosterSerebiiSource(
+		[]*serebii.BoosterSerebiiSource{
+			serebii.NewBoosterSerebiiSource(
 				"Solgaleo",
 				"https://www.serebii.net/tcgpocket/celestialguardians/solgaleo.shtml",
 				data.OfferingRatesTable{
@@ -244,7 +244,7 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 				0,
 				0.0005,
 			),
-			source.NewBoosterSerebiiSource(
+			serebii.NewBoosterSerebiiSource(
 				"Lunala",
 				"https://www.serebii.net/tcgpocket/celestialguardians/lunala.shtml",
 				data.OfferingRatesTable{
@@ -266,12 +266,12 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 			),
 		},
 	),
-	source.NewExpansionSerebiiSource(
+	serebii.NewExpansionSerebiiSource(
 		"extradimensional-crisis",
 		"Extradimensional Crisis",
 		"A3a",
-		[]*source.BoosterSerebiiSource{
-			source.NewBoosterSerebiiSource(
+		[]*serebii.BoosterSerebiiSource{
+			serebii.NewBoosterSerebiiSource(
 				"Booster",
 				"https://www.serebii.net/tcgpocket/extradimensionalcrisis/booster.shtml",
 				data.OfferingRatesTable{
@@ -293,12 +293,12 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 			),
 		},
 	),
-	source.NewExpansionSerebiiSource(
+	serebii.NewExpansionSerebiiSource(
 		"eevee-grove",
 		"Eevee Grove",
 		"A3b",
-		[]*source.BoosterSerebiiSource{
-			source.NewBoosterSerebiiSource(
+		[]*serebii.BoosterSerebiiSource{
+			serebii.NewBoosterSerebiiSource(
 				"Booster",
 				"https://www.serebii.net/tcgpocket/eeveegrove/booster.shtml",
 				data.OfferingRatesTable{
@@ -320,12 +320,12 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 			),
 		},
 	),
-	source.NewExpansionSerebiiSource(
+	serebii.NewExpansionSerebiiSource(
 		"wisdom-of-sea-and-sky",
 		"Wisdom of Sea and Sky",
 		"A4",
-		[]*source.BoosterSerebiiSource{
-			source.NewBoosterSerebiiSource(
+		[]*serebii.BoosterSerebiiSource{
+			serebii.NewBoosterSerebiiSource(
 				"Ho-oh",
 				"https://www.serebii.net/tcgpocket/wisdomofseaandsky/ho-oh.shtml",
 				data.OfferingRatesTable{
@@ -345,7 +345,7 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 				0.0833,
 				0.0005,
 			),
-			source.NewBoosterSerebiiSource(
+			serebii.NewBoosterSerebiiSource(
 				"Lugia",
 				"https://www.serebii.net/tcgpocket/wisdomofseaandsky/lugia.shtml",
 				data.OfferingRatesTable{
@@ -367,12 +367,12 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 			),
 		},
 	),
-	source.NewExpansionSerebiiSource(
+	serebii.NewExpansionSerebiiSource(
 		"secluded-springs",
 		"Secluded Springs",
 		"A4a",
-		[]*source.BoosterSerebiiSource{
-			source.NewBoosterSerebiiSource(
+		[]*serebii.BoosterSerebiiSource{
+			serebii.NewBoosterSerebiiSource(
 				"Secluded Springs Booster",
 				"https://www.serebii.net/tcgpocket/secludedsprings/booster.shtml",
 				data.OfferingRatesTable{
@@ -693,7 +693,7 @@ func main() {
 	for i, s := range expansionDataSources {
 		indexMap[s.Id()] = i
 		g.Go(func() error {
-			return source.FetchExpansionDetails(ctx, s, results)
+			return serebii.FetchExpansionDetails(ctx, s, results)
 		})
 	}
 	err := g.Wait()
