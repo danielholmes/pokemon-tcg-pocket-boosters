@@ -174,7 +174,7 @@ func NewBooster(
 		numOfRarity := float64(cardsByRarity[c.Rarity()])
 		if c.Rarity() != RarityCrown || c.number == rarePackCrownExclusiveExpansionNumber {
 			rareCardOffering = offeringRef.rareOffering
-		} else if c.number == rarePackCrownExclusiveExpansionNumber {
+		} else if c.number != rarePackCrownExclusiveExpansionNumber {
 			numOfRarity -= 1
 		}
 

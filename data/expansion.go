@@ -14,6 +14,7 @@ type Expansion struct {
 	name                string
 	code                string
 	boosters            iter.Seq[*Booster]
+	numBoosters         uint16
 	cards               iter.Seq[*Card]
 	totalNonSecretCards uint16
 	totalSecretCards    uint16
@@ -49,6 +50,7 @@ func NewExpansion(
 		name:                name,
 		code:                code,
 		boosters:            slices.Values(boosters),
+		numBoosters:         uint16(len(boosters)),
 		cards:               slices.Values(cards),
 		totalSecretCards:    totalSecretCards,
 		totalNonSecretCards: uint16(len(cards)) - totalSecretCards,
@@ -110,10 +112,11 @@ func (e *Expansion) GetHighestOfferingBoosterForMissingCards(
 		return nil, fmt.Errorf("no missing card numbers provided")
 	}
 
-	// Can't do this optimisation with seq. Worth adding another way to do it?
-	// if len(e.boosters) == 1 {
-	// 	return e.boosters[0], nil
-	// }
+	if e.numBoosters == 1 {
+		for b := range e.Boosters() {
+			return b, nil
+		}
+	}
 
 	var bestBooster *Booster
 	var bestBoosterProbability = -1.0

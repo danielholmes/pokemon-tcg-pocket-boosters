@@ -51,6 +51,8 @@ go test ./...
 ## TODO
 
  - Implement regular + 1 pack probabilities
+ - Put trades in the simulation. Could make ideal strategy kind of complex, e.g. should maybe ignore 4D, 3D and 1* 
+   when deciding pack openings.
  - Too much info - better ui. Maybe menu choices.
  - Base cards not de-duped between boosters in same expansion. Careful with Eevee example - need moves to work out.
  - Show fractional open packs value.

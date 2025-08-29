@@ -367,6 +367,33 @@ var expansionDataSources = [...]*source.ExpansionSerebiiSource{
 			),
 		},
 	),
+	source.NewExpansionSerebiiSource(
+		"secluded-springs",
+		"Secluded Springs",
+		"A4a",
+		[]*source.BoosterSerebiiSource{
+			source.NewBoosterSerebiiSource(
+				"Secluded Springs Booster",
+				"https://www.serebii.net/tcgpocket/secludedsprings/booster.shtml",
+				data.OfferingRatesTable{
+					data.RarityOneDiamond:   *data.NewBoosterOffering(100.0, 0, 0, 0),
+					data.RarityTwoDiamond:   *data.NewBoosterOffering(0.000, 89.000, 56.000, 0.000),
+					data.RarityThreeDiamond: *data.NewBoosterOffering(0.000, 4.952, 19.810, 0.000),
+					data.RarityFourDiamond:  *data.NewBoosterOffering(0.000, 1.666, 6.664, 0.000),
+					data.RarityOneStar:      *data.NewBoosterOffering(0.000, 2.572, 10.288, 15.151),
+					data.RarityTwoStar:      *data.NewBoosterOffering(0.000, 0.500, 2.000, 36.363),
+					data.RarityThreeStar:    *data.NewBoosterOffering(0.000, 0.222, 0.888, 3.030),
+					data.RarityOneShiny:     *data.NewBoosterOffering(0.000, 0.714, 2.857, 30.303),
+					data.RarityTwoShiny:     *data.NewBoosterOffering(0.000, 0.333, 1.333, 12.121),
+					data.RarityCrown:        *data.NewBoosterOffering(0.000, 0.040, 0.160, 3.030),
+				},
+				105,
+				0.9162,
+				0.0833,
+				0.0005,
+			),
+		},
+	),
 }
 
 func readUserData(expansions []*data.Expansion) (*userdata.UserData, error) {
@@ -444,7 +471,7 @@ func printBoosterDataAudit(expansions []*data.Expansion) {
 				offeringTallies["rare"][c.Card().Rarity()] += c.RareCardOffering()
 
 				totalRegularPackOffering += c.RegularPackOffering()
-				totalRarePackOffering += c.RegularPackOffering()
+				totalRarePackOffering += c.RarePackOffering()
 				totalFirstToThirdOffering += c.First3CardOffering()
 				totalFourthOffering += c.FourthCardOffering()
 				totalFifthOffering += c.FifthCardOffering()

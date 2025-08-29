@@ -43,18 +43,20 @@ func (c *ExpansionCollection) AcquireCardUsingPackPoints(
 func (c *ExpansionCollection) AcquireCardsFromBooster(
 	added iter.Seq[*data.Card],
 ) {
+	// Build a set of added cards in one pass for O(1) lookups
+	addedSet := make(map[*data.Card]struct{})
 	var numCards uint16
-	for range added {
+	for card := range added {
+		addedSet[card] = struct{}{}
 		numCards = numCards + 1
 	}
-	c.missingCards = slices.DeleteFunc(c.missingCards, func(c *data.Card) bool {
-		for a := range added {
-			if a == c {
-				return true
-			}
-		}
-		return false
+
+	// Delete any missing card that appears in the added set
+	c.missingCards = slices.DeleteFunc(c.missingCards, func(m *data.Card) bool {
+		_, exists := addedSet[m]
+		return exists
 	})
+
 	c.packPoints = min(c.packPoints+numCards, data.MaxPackPointsPerBooster)
 }
 
